@@ -25,7 +25,6 @@ swallowing log output).
 # 1. build the three arm64 binaries (no device needed)
 docker run --rm \
   -v D:\Yivi\longfellow-go:/work/longfellow-go \
-  -v D:\Yivi\irmago:/work/irmago:ro \
   -v D:\Yivi\longfellow-go\memprofile:/mem:ro \
   -v D:\Yivi\longfellow-go\androidbench\bin:/out \
   -w /work/longfellow-go longfellow-android build-android-harness.sh

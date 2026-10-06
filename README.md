@@ -327,7 +327,22 @@ sources are **pinned** to tags instead of cloning master; and `CMAKE_PREFIX_PATH
 is passed alongside their `CMAKE_FIND_ROOT_PATH`, since the Android toolchain
 sets `CMAKE_FIND_ROOT_PATH_MODE_PACKAGE` to `ONLY`.
 
-### Two traps worth not rediscovering
+### Three traps worth not rediscovering
+
+**A C++ source file in this package changes how the whole thing links.** Go
+links any package containing a `.cc` file with the C++ driver rather than the C
+one, and the NDK's `clang++` then links **libc++_shared by default** — writing a
+`DT_NEEDED` on `libc++_shared.so` into `libgojni.so`, a library nothing packages
+into an APK. `-lc++_static` does not prevent this: it adds archives, it does not
+stop the driver adding the shared runtime. Hence `-static-libstdc++` beside it;
+the two look redundant and are not. This cost an afternoon when `quiet.cc`
+landed: the wallet died at startup with `UnsatisfiedLinkError ... libc++_shared.so`
+and a stack trace naming `Seq.<clinit>` and nothing about C++, while
+`bind_go.sh`, `go vet` and this module's whole test suite all passed. Verify at
+the binary level after touching anything in the cgo package:
+
+    readelf -d <aar>/jni/arm64-v8a/libgojni.so | grep NEEDED
+    # liblog, libandroid, libm, libdl, libc.  libc++_shared = broken.
 
 **googletest and benchmark must be built even though nothing a wallet links
 needs them.** `CMake/proofs.cmake` calls `find_package` for both at CONFIGURE
