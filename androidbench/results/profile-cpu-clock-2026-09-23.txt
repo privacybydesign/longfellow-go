@@ -1,0 +1,241 @@
+Cmdline: /data/local/tmp/lfbench/simpleperf record -e cpu-clock -f 1000 -g -o perf_new.data ./mem_probe_patched circuits/6_1_4096_2945_137e5a75ce72735a37c8a72da1a8a0a5df8d13365c2ae3d2c2bd6a0e7197c7c6 6 1
+Arch: arm64
+Event: cpu-clock (type 1, config 0)
+Samples: 3332
+Event count: 3332000000
+
+Overhead  Sample  Symbol
+13.30%    443     proofs::ProverLayers<proofs::GF2_128<4ul> >::layer(proofs::Proof<proofs::GF2_128<4ul> >*, proofs::Proof<proofs::GF2_128<4ul> > const*, proofs::TranscriptSumcheck<proofs::GF2_128<4ul> >&, proofs::ProverLayers<proofs::GF2_128<4ul> >::bindings&, unsigned long, unsigned long, unsigned long, proofs::Eqs<proofs::GF2_128<4ul> >*, proofs::HQuad<proofs::GF2_128<4ul> >*, proofs::Dense<proofs::GF2_128<4ul> >*, proofs::GF2_128<4ul>::Elt const&, proofs::GF2_128<4ul>::Elt*, proofs::GF2_128<4ul> const&)
+8.97%     299     proofs::ApproximateDeltaTableBuilder<proofs::GF2_128<4ul> >::dedup(unsigned int, unsigned int, unsigned int, unsigned int)
+7.68%     256     proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::mul0(proofs::Nat<4ul>&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&) const
+7.32%     244     [kernel.kallsyms][+ffffffe79121ef78]
+5.94%     198     proofs::Eqs<proofs::GF2_128<4ul> >::fill_recursive(proofs::GF2_128<4ul>::Elt*, unsigned long, unsigned long, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const&, proofs::GF2_128<4ul>::Elt const&, proofs::GF2_128<4ul> const&)
+5.58%     186     proofs::Quad<proofs::GF2_128<4ul> >::bind_gh_all(unsigned long, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const&, proofs::GF2_128<4ul>::Elt const&, unsigned long, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul> const&) const
+4.77%     159     proofs::ProverLayers<proofs::GF2_128<4ul> >::eval_quad(proofs::Quad<proofs::GF2_128<4ul> > const*, proofs::Dense<proofs::GF2_128<4ul> >*, proofs::Dense<proofs::GF2_128<4ul> > const*, proofs::GF2_128<4ul> const&)
+3.27%     109     [kernel.kallsyms][+ffffffe7916ef1dc]
+3.15%     105     proofs::Quad<proofs::GF2_128<4ul> >::bind_g(unsigned long, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul>::Elt const&, proofs::GF2_128<4ul>::Elt const&, proofs::GF2_128<4ul> const&) const
+2.19%     73      [kernel.kallsyms][+ffffffe7916a8be0]
+2.13%     71      ZSTD_decompressSequences
+2.10%     70      proofs::CircuitReader<proofs::GF2_128<4ul> >::read_quads(proofs::ReadBuffer&, unsigned long, unsigned long, unsigned long, unsigned long, proofs::Quad<proofs::GF2_128<4ul> >&, proofs::ApproximateDeltaTableBuilder<proofs::GF2_128<4ul> >&)
+2.01%     67      [kernel.kallsyms][+ffffffe7916b8c38]
+1.98%     66      proofs::Eqs<proofs::GF2_128<4ul> >::Eqs(unsigned long, unsigned long, proofs::GF2_128<4ul>::Elt const*, proofs::GF2_128<4ul> const&)
+1.89%     63      [kernel.kallsyms][+ffffffe7916f47e8]
+1.68%     56      [kernel.kallsyms][+ffffffe7929df89c]
+1.65%     55      __memset_aarch64
+1.26%     42      proofs::LCH14<proofs::GF2_128<4ul> >::FFT(unsigned long, unsigned long, proofs::GF2_128<4ul>::Elt*) const
+1.17%     39      [kernel.kallsyms][+ffffffe7916c16a4]
+0.90%     30      proofs::Nat<9ul>& proofs::Nat<9ul>::mac<4ul, 4ul>(proofs::Nat<4ul> const&, proofs::Nat<4ul> const&)
+0.90%     30      proofs::ProverLayers<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::layer(proofs::Proof<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >*, proofs::Proof<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> > const*, proofs::TranscriptSumcheck<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >&, proofs::ProverLayers<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::bindings&, unsigned long, unsigned long, unsigned long, proofs::Eqs<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >*, proofs::HQuad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >*, proofs::Dense<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.75%     25      [kernel.kallsyms][+ffffffe79164ea14]
+0.69%     23      proofs::ApproximateDeltaTableBuilder<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::dedup(unsigned int, unsigned int, unsigned int, unsigned int)
+0.66%     22      SHA256_Update
+0.66%     22      proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::mul(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&) const
+0.63%     21      [kernel.kallsyms][+ffffffe7916ea5f4]
+0.60%     20      [kernel.kallsyms][+ffffffe79164bfac]
+0.60%     20      proofs::Eqs<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::fill_recursive(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, unsigned long, unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.54%     18      proofs::RFFT<proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> >::cmul(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.51%     17      proofs::ProverLayers<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::eval_quad(proofs::Quad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> > const*, proofs::Dense<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >*, proofs::Dense<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> > const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.42%     14      [kernel.kallsyms][+ffffffe7916a996c]
+0.42%     14      proofs::Quad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::bind_gh_all(unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&) const
+0.42%     14      proofs::RFFT<proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> >::cmulj(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.42%     14      sha256_block_armv8
+0.36%     12      inc_128
+0.33%     11      [kernel.kallsyms][+ffffffe7916c1a2c]
+0.33%     11      proofs::Quad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::bind_g(unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&) const
+0.30%     10      [kernel.kallsyms][+ffffffe7917610e0]
+0.30%     10      proofs::CircuitReader<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::read_quads(proofs::ReadBuffer&, unsigned long, unsigned long, unsigned long, unsigned long, proofs::Quad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >&, proofs::ApproximateDeltaTableBuilder<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >&)
+0.27%     9       proofs::Eqs<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::filleq(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, unsigned long, unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.27%     9       proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt proofs::affine_interpolation<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.27%     9       proofs::LCH14<proofs::GF2_128<4ul> >::IFFT(unsigned long, unsigned long, proofs::GF2_128<4ul>::Elt*) const
+0.27%     9       proofs::ProverLayers<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::evaluations(unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.27%     9       std::__ndk1::__function::__func<proofs::LigeroProver<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::commit(proofs::LigeroCommitment<proofs::GF2_128<4ul> >&, proofs::Transcript&, proofs::GF2_128<4ul>::Elt const*, unsigned long, proofs::LigeroQuadraticConstraint const*, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > const&, proofs::RandomEngine&, proofs::GF2_128<4ul> const&)::'lambda'(unsigned long, proofs::SHA256&), std::__ndk1::allocator<proofs::LigeroProver<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::commit(proofs::LigeroCommitment<proofs::GF2_128<4ul> >&, proofs::Transcript&, proofs::GF2_128<4ul>::Elt const*, unsigned long, proofs::LigeroQuadraticConstraint const*, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > const&, proofs::RandomEngine&, proofs::GF2_128<4ul> const&)::'lambda'(unsigned long, proofs::SHA256&)>, void (unsigned long, proofs::SHA256&)>::operator()(unsigned long&&, proofs::SHA256&)
+0.24%     8       [kernel.kallsyms][+ffffffe7916a977c]
+0.24%     8       [kernel.kallsyms][+ffffffe7916ced74]
+0.24%     8       void proofs::HQuad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::bind_h<0ul>(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.21%     7       proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::mul(proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt&, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&) const
+0.18%     6       [kernel.kallsyms][+ffffffe7916a98a4]
+0.18%     6       proofs::Dense<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::bind(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::Dense<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> > const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.18%     6       proofs::RFFT<proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> >::hc2hcb_4(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, unsigned long, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.15%     5       [kernel.kallsyms][+ffffffe7916a8bf0]
+0.15%     5       [kernel.kallsyms][+ffffffe7916ced48]
+0.15%     5       [kernel.kallsyms][+ffffffe7916ced7c]
+0.15%     5       proofs::RFFT<proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> >::hc2hcf_4(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, unsigned long, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.15%     5       proofs::ZkProof<proofs::GF2_128<4ul> >::write_com_proof(proofs::LigeroProof<proofs::GF2_128<4ul> > const&, std::__ndk1::vector<unsigned char, std::__ndk1::allocator<unsigned char> >&, proofs::GF2_128<4ul> const&) const
+0.12%     4       EVP_EncryptUpdate
+0.12%     4       SHA256_Final
+0.12%     4       ZSTD_decompressSequencesLong
+0.12%     4       [kernel.kallsyms][+ffffffe7916f48d0]
+0.12%     4       cipher_generic_init_internal
+0.12%     4       cipher_hw_aes_initkey
+0.12%     4       drbg_ctr_generate
+0.12%     4       proofs::RFFT<proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> >::r2hc(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*, unsigned long, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true>::Elt const&, unsigned long, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> const&)
+0.12%     4       void proofs::HQuad<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::bind_h<1ul>(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.09%     3       [kernel.kallsyms][+ffffffe79121ef74]
+0.09%     3       [kernel.kallsyms][+ffffffe79121ef7c]
+0.09%     3       [kernel.kallsyms][+ffffffe7912bacbc]
+0.09%     3       [kernel.kallsyms][+ffffffe79164c008]
+0.09%     3       [kernel.kallsyms][+ffffffe7916f46dc]
+0.09%     3       [kernel.kallsyms][+ffffffe792c0fc68]
+0.09%     3       __memmove_aarch64_simd
+0.09%     3       ctr_update
+0.09%     3       evp_cipher_init_internal
+0.09%     3       ossl_cipher_generic_block_update
+0.09%     3       proofs::LCH14<proofs::GF2_128<4ul> >::bidir_recur(unsigned long, unsigned long, unsigned long, proofs::GF2_128<4ul>::Elt*) const
+0.06%     2       CRYPTO_THREAD_read_lock
+0.06%     2       CRYPTO_THREAD_run_once
+0.06%     2       CRYPTO_ctr128_encrypt_ctr32
+0.06%     2       EVP_CIPHER_CTX_reset
+0.06%     2       RAND_bytes_ex
+0.06%     2       [kernel.kallsyms][+ffffffe791652f04]
+0.06%     2       [kernel.kallsyms][+ffffffe7916a8ab8]
+0.06%     2       [kernel.kallsyms][+ffffffe7916a9968]
+0.06%     2       [kernel.kallsyms][+ffffffe7916ad7d0]
+0.06%     2       [kernel.kallsyms][+ffffffe7916ad910]
+0.06%     2       [kernel.kallsyms][+ffffffe7916c18c8]
+0.06%     2       [kernel.kallsyms][+ffffffe7916ced8c]
+0.06%     2       [kernel.kallsyms][+ffffffe7916cedc8]
+0.06%     2       [kernel.kallsyms][+ffffffe7916dbcb8]
+0.06%     2       [kernel.kallsyms][+ffffffe7916ea5e8]
+0.06%     2       [kernel.kallsyms][+ffffffe792c0fc88]
+0.06%     2       [kernel.kallsyms][+ffffffe796715318]
+0.06%     2       aes_v8_set_encrypt_key
+0.06%     2       je_arena_maybe_purge
+0.06%     2       je_malloc
+0.06%     2       ossl_cipher_generic_stream_update
+0.06%     2       ossl_namemap_name2num
+0.06%     2       proofs::LigeroCommon<proofs::GF2_128<4ul> >::inner_product_vector(proofs::GF2_128<4ul>::Elt*, proofs::LigeroParam<proofs::GF2_128<4ul> > const&, unsigned long, unsigned long, proofs::LigeroLinearConstraint<proofs::GF2_128<4ul> > const*, proofs::GF2_128<4ul>::Elt const*, proofs::LigeroQuadraticConstraint const*, std::__ndk1::array<proofs::GF2_128<4ul>::Elt, 3ul> const*, proofs::GF2_128<4ul> const&)
+0.06%     2       proofs::LigeroProver<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::commit(proofs::LigeroCommitment<proofs::GF2_128<4ul> >&, proofs::Transcript&, proofs::GF2_128<4ul>::Elt const*, unsigned long, proofs::LigeroQuadraticConstraint const*, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > const&, proofs::RandomEngine&, proofs::GF2_128<4ul> const&)
+0.06%     2       proofs::LigeroProver<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::prove(proofs::LigeroProof<proofs::GF2_128<4ul> >&, proofs::Transcript&, unsigned long, unsigned long, proofs::LigeroLinearConstraint<proofs::GF2_128<4ul> > const*, proofs::LigeroHash const&, proofs::LigeroQuadraticConstraint const*, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > const&, proofs::GF2_128<4ul> const&)
+0.06%     2       proofs::ReedSolomon<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, proofs::FFTExtConvolutionFactory<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> > >::interpolate(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*) const
+0.06%     2       std::__ndk1::__function::__func<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt proofs::RandomEngine::elt<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)::'lambda'(unsigned long, unsigned char*), std::__ndk1::allocator<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt proofs::RandomEngine::elt<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)::'lambda'(unsigned long, unsigned char*)>, void (unsigned long, unsigned char*)>::operator()(unsigned long&&, unsigned char*&&)
+0.03%     1       EVP_CIPHER_CTX_get_key_length
+0.03%     1       OSSL_PARAM_set_uint64
+0.03%     1       ZSTD_buildFSETable
+0.03%     1       [kernel.kallsyms][+ffffffe79121ef80]
+0.03%     1       [kernel.kallsyms][+ffffffe79121ef84]
+0.03%     1       [kernel.kallsyms][+ffffffe791388774]
+0.03%     1       [kernel.kallsyms][+ffffffe7913f3538]
+0.03%     1       [kernel.kallsyms][+ffffffe79164c494]
+0.03%     1       [kernel.kallsyms][+ffffffe79164c820]
+0.03%     1       [kernel.kallsyms][+ffffffe79164c870]
+0.03%     1       [kernel.kallsyms][+ffffffe79164db5c]
+0.03%     1       [kernel.kallsyms][+ffffffe79164db68]
+0.03%     1       [kernel.kallsyms][+ffffffe791652ef0]
+0.03%     1       [kernel.kallsyms][+ffffffe791652efc]
+0.03%     1       [kernel.kallsyms][+ffffffe791652f14]
+0.03%     1       [kernel.kallsyms][+ffffffe791653894]
+0.03%     1       [kernel.kallsyms][+ffffffe79169e728]
+0.03%     1       [kernel.kallsyms][+ffffffe7916a8b9c]
+0.03%     1       [kernel.kallsyms][+ffffffe7916a8e9c]
+0.03%     1       [kernel.kallsyms][+ffffffe7916a8f40]
+0.03%     1       [kernel.kallsyms][+ffffffe7916a99fc]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ac9d0]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ac9d8]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ad464]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ad868]
+0.03%     1       [kernel.kallsyms][+ffffffe7916adeec]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c16d4]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c1728]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c1810]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c1928]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c1a78]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c2068]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c2074]
+0.03%     1       [kernel.kallsyms][+ffffffe7916c90e0]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ced0c]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ced64]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ced84]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ced88]
+0.03%     1       [kernel.kallsyms][+ffffffe7916cedc0]
+0.03%     1       [kernel.kallsyms][+ffffffe7916dac44]
+0.03%     1       [kernel.kallsyms][+ffffffe7916dadbc]
+0.03%     1       [kernel.kallsyms][+ffffffe7916daddc]
+0.03%     1       [kernel.kallsyms][+ffffffe7916dae78]
+0.03%     1       [kernel.kallsyms][+ffffffe7916db10c]
+0.03%     1       [kernel.kallsyms][+ffffffe7916dbaa8]
+0.03%     1       [kernel.kallsyms][+ffffffe7916dbb00]
+0.03%     1       [kernel.kallsyms][+ffffffe7916dbc58]
+0.03%     1       [kernel.kallsyms][+ffffffe7916e9228]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ea5d4]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ea5ec]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ea5f0]
+0.03%     1       [kernel.kallsyms][+ffffffe7916eadfc]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ebc8c]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ebf18]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ec140]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ec418]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ec4dc]
+0.03%     1       [kernel.kallsyms][+ffffffe7916ec508]
+0.03%     1       [kernel.kallsyms][+ffffffe7916f46cc]
+0.03%     1       [kernel.kallsyms][+ffffffe7916f4728]
+0.03%     1       [kernel.kallsyms][+ffffffe7916f4744]
+0.03%     1       [kernel.kallsyms][+ffffffe7916fae80]
+0.03%     1       [kernel.kallsyms][+ffffffe791702e70]
+0.03%     1       [kernel.kallsyms][+ffffffe791702e7c]
+0.03%     1       [kernel.kallsyms][+ffffffe791702e90]
+0.03%     1       [kernel.kallsyms][+ffffffe791702e9c]
+0.03%     1       [kernel.kallsyms][+ffffffe79171f384]
+0.03%     1       [kernel.kallsyms][+ffffffe791756200]
+0.03%     1       [kernel.kallsyms][+ffffffe791758630]
+0.03%     1       [kernel.kallsyms][+ffffffe7917586d8]
+0.03%     1       [kernel.kallsyms][+ffffffe79175871c]
+0.03%     1       [kernel.kallsyms][+ffffffe791758b84]
+0.03%     1       [kernel.kallsyms][+ffffffe791758bc8]
+0.03%     1       [kernel.kallsyms][+ffffffe791760efc]
+0.03%     1       [kernel.kallsyms][+ffffffe791760fe0]
+0.03%     1       [kernel.kallsyms][+ffffffe79178b5f0]
+0.03%     1       [kernel.kallsyms][+ffffffe7917a89c4]
+0.03%     1       [kernel.kallsyms][+ffffffe7918b7390]
+0.03%     1       [kernel.kallsyms][+ffffffe792a006c8]
+0.03%     1       [kernel.kallsyms][+ffffffe792a395f8]
+0.03%     1       [kernel.kallsyms][+ffffffe792c0fc80]
+0.03%     1       [kernel.kallsyms][+ffffffe792c0fc94]
+0.03%     1       [kernel.kallsyms][+ffffffe792c12048]
+0.03%     1       [kernel.kallsyms][+ffffffe792c12060]
+0.03%     1       [kernel.kallsyms][+ffffffe795237930]
+0.03%     1       [kernel.kallsyms][+ffffffe795246284]
+0.03%     1       [kernel.kallsyms][+ffffffe796715338]
+0.03%     1       [linker]BionicAllocator::get_small_object_allocator(page_info*, void*)
+0.03%     1       [linker]NonPI::MutexLockWithTimeout(pthread_mutex_internal_t*, bool, timespec const*)
+0.03%     1       [linker]calculate_gnu_hash_neon(char const*)
+0.03%     1       __aarch64_swp2_rel
+0.03%     1       __kernel_gettimeofday
+0.03%     1       __memcmp_aarch64
+0.03%     1       aes_v8_ecb_encrypt
+0.03%     1       arena_avail_remove
+0.03%     1       arena_run_dalloc
+0.03%     1       arena_run_heap_remove
+0.03%     1       cipher_hw_aes_arm_initkey
+0.03%     1       drbg_ctr_generate_wrapper
+0.03%     1       evp_method_id
+0.03%     1       evp_rand_unlock
+0.03%     1       flowctrl_enabled()
+0.03%     1       fnv1a_hash
+0.03%     1       get_parent_reseed_count
+0.03%     1       getrn
+0.03%     1       ifree
+0.03%     1       je_arena_chunk_alloc_huge
+0.03%     1       je_arena_malloc_hard
+0.03%     1       je_arena_purge
+0.03%     1       je_extent_tree_ad_remove
+0.03%     1       ossl_cipher_generic_initiv
+0.03%     1       ossl_cipher_hw_generic_ctr
+0.03%     1       ossl_drbg_get_ctx_params_no_lock
+0.03%     1       ossl_lib_ctx_get_data
+0.03%     1       ossl_namemap_stored
+0.03%     1       proofs::FFTExtConvolution<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> >::convolution(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt*) const
+0.03%     1       proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::from_montgomery(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const&) const
+0.03%     1       proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::invertf(proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt) const
+0.03%     1       proofs::GF2_128<4ul>::of_scalar(unsigned long) const
+0.03%     1       proofs::LigeroCommon<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> >::column_hash(unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>::Elt const*, unsigned long, proofs::SHA256&, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&)
+0.03%     1       proofs::LigeroProver<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::dot_proof(proofs::GF2_128<4ul>::Elt*, proofs::GF2_128<4ul>::Elt const*, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > const&, proofs::GF2_128<4ul> const&)
+0.03%     1       proofs::LigeroVerifier<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::dot_check(proofs::LigeroParam<proofs::GF2_128<4ul> > const&, proofs::LigeroProof<proofs::GF2_128<4ul> > const&, unsigned long const*, proofs::GF2_128<4ul>::Elt const*, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > const&, proofs::GF2_128<4ul> const&)
+0.03%     1       proofs::MdocHashWitness<proofs::EllipticCurve<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, 4ul, 256ul>, proofs::GF2_128<4ul> >::fill_witness(proofs::DenseFiller<proofs::GF2_128<4ul> >&, unsigned long) const
+0.03%     1       proofs::ReedSolomon<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, proofs::FFTExtConvolutionFactory<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> > >::ReedSolomon(unsigned long, unsigned long, proofs::FpGeneric<4ul, true, proofs::Fp256Reduce> const&, proofs::FFTExtConvolutionFactory<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, proofs::Fp2<proofs::FpGeneric<4ul, true, proofs::Fp256Reduce>, true> > const&)
+0.03%     1       proofs::Transcript::bytes(unsigned char*, unsigned long)
+0.03%     1       proofs::ZkCommon<proofs::GF2_128<4ul> >::input_constraint(proofs::ZkCommon<proofs::GF2_128<4ul> >::Claims const&, proofs::Dense<proofs::GF2_128<4ul> > const&, unsigned long, unsigned long, unsigned long, proofs::GF2_128<4ul>::Elt, proofs::GF2_128<4ul>::Elt, std::__ndk1::vector<proofs::LigeroLinearConstraint<proofs::GF2_128<4ul> >, std::__ndk1::allocator<proofs::LigeroLinearConstraint<proofs::GF2_128<4ul> > > >&, std::__ndk1::vector<proofs::GF2_128<4ul>::Elt, std::__ndk1::allocator<proofs::GF2_128<4ul>::Elt> >&, unsigned long, proofs::GF2_128<4ul> const&)
+0.03%     1       pthread_getspecific
+0.03%     1       sha256_block_data_order
+0.03%     1       std::__ndk1::__function::__func<proofs::LigeroVerifier<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::merkle_check(proofs::LigeroParam<proofs::GF2_128<4ul> > const&, proofs::LigeroCommitment<proofs::GF2_128<4ul> > const&, proofs::LigeroProof<proofs::GF2_128<4ul> > const&, unsigned long const*, proofs::GF2_128<4ul> const&)::'lambda'(unsigned long, proofs::SHA256&), std::__ndk1::allocator<proofs::LigeroVerifier<proofs::GF2_128<4ul>, proofs::LCH14ReedSolomonFactory<proofs::GF2_128<4ul> > >::merkle_check(proofs::LigeroParam<proofs::GF2_128<4ul> > const&, proofs::LigeroCommitment<proofs::GF2_128<4ul> > const&, proofs::LigeroProof<proofs::GF2_128<4ul> > const&, unsigned long const*, proofs::GF2_128<4ul> const&)::'lambda'(unsigned long, proofs::SHA256&)>, void (unsigned long, proofs::SHA256&)>::operator()(unsigned long&&, proofs::SHA256&)
+0.03%     1       time
+0.03%     1       void std::__ndk1::vector<unsigned char, std::__ndk1::allocator<unsigned char> >::__assign_with_sentinel[abi:ne180000]<std::__ndk1::istreambuf_iterator<char, std::__ndk1::char_traits<char> >, std::__ndk1::istreambuf_iterator<char, std::__ndk1::char_traits<char> > >(std::__ndk1::istreambuf_iterator<char, std::__ndk1::char_traits<char> >, std::__ndk1::istreambuf_iterator<char, std::__ndk1::char_traits<char> >)

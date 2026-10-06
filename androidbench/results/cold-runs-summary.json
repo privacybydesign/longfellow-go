@@ -1,0 +1,50 @@
+[
+  {
+    "Circuit": "v6/1attr",
+    "Variant": "baseline",
+    "Runs": 10,
+    "ProveMedian": 1573,
+    "ProveMin": 1499,
+    "ProveMax": 1657,
+    "VerifyMedian": 854,
+    "VerifyMin": 801,
+    "VerifyMax": 931,
+    "PeakMbMedian": 211.1
+  },
+  {
+    "Circuit": "v6/1attr",
+    "Variant": "patched",
+    "Runs": 10,
+    "ProveMedian": 1490,
+    "ProveMin": 1445,
+    "ProveMax": 1501,
+    "VerifyMedian": 773,
+    "VerifyMin": 756,
+    "VerifyMax": 788,
+    "PeakMbMedian": 139.9
+  },
+  {
+    "Circuit": "v7/1attr",
+    "Variant": "baseline",
+    "Runs": 10,
+    "ProveMedian": 1703,
+    "ProveMin": 1550,
+    "ProveMax": 1741,
+    "VerifyMedian": 882,
+    "VerifyMin": 809,
+    "VerifyMax": 929,
+    "PeakMbMedian": 215.2
+  },
+  {
+    "Circuit": "v7/1attr",
+    "Variant": "patched",
+    "Runs": 10,
+    "ProveMedian": 1556,
+    "ProveMin": 1520,
+    "ProveMax": 1580,
+    "VerifyMedian": 786,
+    "VerifyMin": 778,
+    "VerifyMax": 799,
+    "PeakMbMedian": 165.0
+  }
+]

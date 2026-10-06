@@ -1,0 +1,47 @@
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_decompress.cc (1 site(s))
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_decompress.cc (1 site(s))
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_zk.cc (1 site(s))
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_zk.cc (1 site(s))
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_circuit_id.cc (1 site(s))
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_zk.cc (1 site(s))
+patched /src/longfellow-zk/lib/circuits/mdoc/mdoc_zk.cc (1 site(s))
+ 5/23 Test #200: MAC.full_circuit_GF2_128 ................................   Passed    0.01 sec
+      Start 201: mdoc.mdoc_signature_test
+ 6/23 Test #201: mdoc.mdoc_signature_test ................................   Passed    1.13 sec
+      Start 202: mdoc.mdoc_issuer_list_valid
+ 7/23 Test #202: mdoc.mdoc_issuer_list_valid .............................   Passed    0.00 sec
+      Start 203: mdoc.mdoc_signature_test_with_issuer_list
+ 8/23 Test #203: mdoc.mdoc_signature_test_with_issuer_list ...............   Passed    1.10 sec
+      Start 204: mdoc.mdoc_hash_test_fp128
+ 9/23 Test  #83: circuit_io.SHA ..........................................   Passed    5.52 sec
+      Start 205: mdoc.mdoc_hash_test_fp128_2
+10/23 Test #204: mdoc.mdoc_hash_test_fp128 ...............................   Passed   39.87 sec
+      Start 206: MdocZKTest.one_claim
+11/23 Test #205: mdoc.mdoc_hash_test_fp128_2 .............................   Passed   41.26 sec
+      Start 207: MdocZKTest.long_attribute
+12/23 Test #207: MdocZKTest.long_attribute ...............................   Passed   34.83 sec
+      Start 208: MdocZKTest.two_claims
+13/23 Test #206: MdocZKTest.one_claim ....................................   Passed   65.82 sec
+      Start 209: MdocZKTest.wrong_witness
+14/23 Test #208: MdocZKTest.two_claims ...................................   Passed   37.18 sec
+      Start 210: MdocZKTest.bad_arguments
+15/23 Test #209: MdocZKTest.wrong_witness ................................   Passed   35.26 sec
+      Start 211: MdocZKTest.attr_mismatch
+16/23 Test #210: MdocZKTest.bad_arguments ................................   Passed   32.45 sec
+      Start 212: MdocZKTest.bad_proofs
+17/23 Test #211: MdocZKTest.attr_mismatch ................................   Passed   30.74 sec
+      Start 213: CircuitGenerationTest.attempt_to_generate_old_circuit
+18/23 Test #213: CircuitGenerationTest.attempt_to_generate_old_circuit ...   Passed    0.01 sec
+      Start 227: mdoc.mdoc_small_test
+19/23 Test #227: mdoc.mdoc_small_test ....................................   Passed    3.44 sec
+      Start 314: Mdoc1fTest.RunsExamples
+20/23 Test #314: Mdoc1fTest.RunsExamples .................................   Passed    5.64 sec
+      Start 315: mdoc.mdoc_revocation_list_test
+21/23 Test #315: mdoc.mdoc_revocation_list_test ..........................   Passed    0.49 sec
+      Start 316: mdoc.mdoc_revocation_span_test
+22/23 Test #316: mdoc.mdoc_revocation_span_test ..........................   Passed    1.17 sec
+23/23 Test #212: MdocZKTest.bad_proofs ...................................   Passed   38.77 sec
+
+100% tests passed, 0 tests failed out of 23
+
+Total Test time (real) = 190.06 sec

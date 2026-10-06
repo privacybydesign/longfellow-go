@@ -1,0 +1,10 @@
+  // Parse circuits from cached byte representation.
+  //
+  // Scoped, the way the prover already scopes its copy: the decompressed
+  // circuit is needed only until CircuitReader has built c_sig and c_hash, and
+  // holding it for the whole verification adds its full size to the peak.
+  std::unique_ptr<Circuit<Fp256Base>> c_sig;
+  std::unique_ptr<Circuit<f_128>> c_hash;
+  { /* scope for the bytes array */
+  std::vector<uint8_t> bytes;
+  size_t full_size = decompress(bytes, bcp, bcsz);

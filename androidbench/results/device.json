@@ -1,0 +1,8 @@
+{
+  "model": "CPH2423",
+  "soc": "mt6895",
+  "android": "15",
+  "abi": "arm64-v8a",
+  "cores": "8",
+  "memTotal": "MemTotal:       11697392 kB"
+}

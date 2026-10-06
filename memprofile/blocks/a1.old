@@ -1,0 +1,2 @@
+  size_t res =
+      ZSTD_decompress(bytes.data(), bytes.size(), compressed, compressed_len);

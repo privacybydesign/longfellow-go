@@ -1,0 +1,53 @@
+# Android cross-compilation on top of the x86_64 build image.
+#
+# irmago #724 Phase 0 step 4: "cross-compile android/arm64 + ios/arm64". This is
+# the android half; iOS needs a Mac and is not reachable from here.
+#
+# A separate image, derived FROM longfellow-build, for two reasons. The NDK is
+# roughly a gigabyte and has no business in the image used for ordinary x86_64
+# work, and deriving means the C++ library above it is never rebuilt to get here.
+#
+#   docker build -t longfellow-build .                            # first
+#   docker build -t longfellow-android -f Dockerfile.android .    # then this
+#
+# NOTE: nothing here needs a device. Cross-compiling produces artefacts and
+# proves they link; running them is a separate exercise that does need a phone.
+FROM longfellow-build
+
+# r27c is the current LTS. Pinned rather than "latest" because the NDK's bundled
+# clang decides the ABI we produce, and a silent bump is not something anyone
+# would notice until a wallet crashed on a device.
+ARG NDK_VERSION=r27c
+ENV ANDROID_NDK_ROOT=/opt/android-ndk-${NDK_VERSION}
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && curl -fsSL "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip" \
+         -o /tmp/ndk.zip \
+    && unzip -q /tmp/ndk.zip -d /opt \
+    && rm /tmp/ndk.zip \
+    && rm -rf /var/lib/apt/lists/* \
+    && test -f "${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake"
+
+# The NDK's own clang, which is what both CMake and cgo must use.
+ENV ANDROID_TOOLCHAIN=${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64
+ENV PATH=${ANDROID_TOOLCHAIN}/bin:${PATH}
+
+COPY scripts/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+# android-24 matches what upstream's android.sh targets, and is below anything
+# the wallet supports, so it is not the constraint.
+ENV ANDROID_ABI=arm64-v8a
+ENV ANDROID_API=24
+
+# Cross-build at image-build time, for the same reason the x86_64 image does:
+# a `docker run --rm` that builds an install tree throws it away, and the Go
+# cross-build in the next step needs that tree. Learned the hard way, twice.
+#
+# This is the slow layer — googletest, benchmark, zstd and a trimmed OpenSSL all
+# cross-compile before longfellow itself — so it goes last, where nothing above
+# it has to be rebuilt when it changes.
+RUN build-longfellow-android.sh
+
+ENV LONGFELLOW_ANDROID_INSTALL=/src/longfellow-zk/install-android-arm64-v8a

@@ -1,0 +1,16 @@
+# Go build output
+*.exe
+
+# androidbench/bin holds ~52 MB of cross-compiled binaries, rebuilt by
+# scripts/build-android-harness.sh, plus a copy of Multipaz's prebuilt libzkp.so.
+# The .so especially must never be committed: #724 constraint 1 is that no
+# prebuilt binary enters the repo or the module graph, and it is not ours.
+#
+# androidbench/results is NOT ignored -- those CSVs are the measurement record
+# behind the figures, the same way memprofile/results is tracked.
+androidbench/bin/
+
+# The release tarball package-android-libs.sh produces. It ships as a RELEASE
+# ASSET on this repository, never in the tree: a .a in git would put a prebuilt
+# binary in the repo, which is exactly what #724 constraint 1 forbids.
+androidbench/dist/

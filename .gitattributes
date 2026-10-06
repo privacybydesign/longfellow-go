@@ -1,0 +1,25 @@
+# Scripts here run inside a Linux container. Checked out with CRLF on Windows,
+# their shebangs become "#!/usr/bin/env bash\r" and the kernel cannot find the
+# interpreter — the failure reads as "No such file or directory" naming a file
+# that plainly exists. multipaz's gradlew cost us an hour of exactly this.
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+
+# Go toolchain and gofmt assume LF.
+*.go        text eol=lf
+go.mod      text eol=lf
+*.cc        text eol=lf
+*.h         text eol=lf
+
+# PowerShell runs on the Windows host, so it keeps CRLF.
+*.ps1       text eol=crlf
+
+# memprofile/: the patch blocks are matched LITERALLY against LF source inside
+# the container, so a CRLF checkout makes every replacement fail to find its
+# site. replace.pl runs there too.
+*.pl        text eol=lf
+*.old       text eol=lf
+*.new       text eol=lf
+*.md        text eol=lf
+*.csv       text eol=lf
+*.txt       text eol=lf

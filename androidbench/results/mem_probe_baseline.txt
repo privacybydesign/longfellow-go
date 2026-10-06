@@ -1,0 +1,11 @@
+spec: longfellow-libzk-v1 version=6 attrs=1
+start                              RSS=   4832 kB  HWM=   4832 kB
+circuit file: 278354 bytes
+after reading circuit file         RSS=   5916 kB  HWM=   6044 kB
+prove: 324604 byte proof in 1700 ms
+after prove                        RSS=   9104 kB  HWM= 163572 kB
+verify: OK in 891 ms
+after verify                       RSS=   9052 kB  HWM= 215960 kB
+
+peak sampled RSS: 215960 kB (210.9 MB)   VmHWM: 215960 kB (210.9 MB)
+trace -> /data/local/tmp/lfbench/trace_mem_probe_baseline.csv (243 samples)

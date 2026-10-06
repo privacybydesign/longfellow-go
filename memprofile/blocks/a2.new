@@ -1,0 +1,2 @@
+    std::vector<uint8_t> bytes;  // sized by decompress from the frame header
+    (void)len;
