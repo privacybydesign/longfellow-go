@@ -8,7 +8,6 @@
 #
 #   docker run --rm \
 #     -v D:\Yivi\longfellow-go:/work/longfellow-go \
-#     -v D:\Yivi\irmago:/work/irmago:ro \
 #     -w /work/longfellow-go longfellow-android build-module-android.sh
 #
 # NO DEVICE IS REQUIRED. This produces artefacts and proves they link; running

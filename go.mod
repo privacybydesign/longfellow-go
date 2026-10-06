@@ -7,16 +7,16 @@
 // imports both and wires them together. That is what keeps irmago buildable
 // with CGO_ENABLED=0 and keeps this from becoming a module cycle.
 //
-// The replace directive points at the working checkout because neither side is
-// published yet. It comes out when irmago tags a version carrying the zk
-// package.
+// irmago is pinned to a commit on its ZKP_Age_Verification branch (PR #735),
+// which is where the zk package lives until it merges. Bump to a tagged irmago
+// release once one carries the package.
 module github.com/privacybydesign/longfellow-go
 
 go 1.27
 
 require (
 	github.com/fxamacker/cbor/v2 v2.9.2
-	github.com/privacybydesign/irmago v0.0.0
+	github.com/privacybydesign/irmago v1.4.1-0.20261006095929-aa86755950e7
 	github.com/stretchr/testify v1.12.0
 	github.com/veraison/go-cose v1.3.0
 )
@@ -50,5 +50,3 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/gorm v1.31.1 // indirect
 )
-
-replace github.com/privacybydesign/irmago => ../irmago

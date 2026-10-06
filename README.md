@@ -61,14 +61,13 @@ docker build -t longfellow-build .
 
 docker run --rm \
   -v D:\Yivi\longfellow-go:/work/longfellow-go \
-  -v D:\Yivi\irmago:/work/irmago:ro \
   -v D:\Yivi\multipaz\multipaz-longfellow\src\commonMain\circuits:/circuits:ro \
   -w /work/longfellow-go -e LONGFELLOW_CIRCUITS=/circuits \
   longfellow-build build-module.sh
 ```
 
-Both checkouts must be mounted: `go.mod` replaces irmago with `../irmago`
-because neither side is published yet.
+irmago is fetched as an ordinary module dependency, pinned to the commit on
+its ZKP_Age_Verification branch that carries the zk package (see go.mod).
 
 **Link paths are not baked into the cgo directives.** Google's reference binding
 writes `-L../../install/lib`, which resolves only from its own directory in its
@@ -309,7 +308,6 @@ docker build -t longfellow-android -f Dockerfile.android .    # adds NDK + arm64
 
 docker run --rm \
   -v D:\Yivi\longfellow-go:/work/longfellow-go \
-  -v D:\Yivi\irmago:/work/irmago:ro \
   -w /work/longfellow-go longfellow-android build-module-android.sh
 ```
 

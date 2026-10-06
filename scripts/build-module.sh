@@ -2,12 +2,11 @@
 # Builds and tests the Go module against the longfellow library installed in the
 # image. irmago #724 Phase 1's deliverable.
 #
-# Run inside the build container, with both checkouts mounted because go.mod
-# replaces irmago with ../irmago:
+# Run inside the build container. irmago is fetched as an ordinary module
+# dependency (see go.mod), so only this checkout and a circuit directory mount:
 #
 #   docker run --rm \
 #     -v D:\Yivi\longfellow-go:/work/longfellow-go \
-#     -v D:\Yivi\irmago:/work/irmago:ro \
 #     -v <circuits>:/circuits:ro \
 #     -w /work/longfellow-go -e LONGFELLOW_CIRCUITS=/circuits \
 #     longfellow-build build-module.sh
