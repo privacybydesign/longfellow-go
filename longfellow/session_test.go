@@ -151,12 +151,7 @@ func zkDeviceRequest(t *testing.T, offered []mdoc.ZkSystemSpec, elements ...stri
 func v6Specs(t *testing.T, prover *mdoc.ProverSystem) []mdoc.ZkSystemSpec {
 	t.Helper()
 
-	var offered []mdoc.ZkSystemSpec
-	for _, spec := range prover.SystemSpecs() {
-		if version, ok := spec.Version(); ok && version == 6 {
-			offered = append(offered, spec)
-		}
-	}
+	offered := specsOfVersion(prover, 6)
 	require.NotEmpty(t, offered, "the circuit directory must carry v6 circuits")
 	return offered
 }

@@ -98,7 +98,8 @@ x86_64, in the container, v7/1-attribute circuit:
 | `Open`, compiled-in `MapCache` | **0 ms** |
 | a whole org-iso-mdoc session, request to sealed response | **847 ms** |
 
-20 tests green in ~137 s.
+21 tests green (the round trip proves once per circuit revision held, so the
+profile's v6 circuit is exercised as well as the newest).
 
 The session figure is the interesting one: it is a complete `isomdoc.Session`
 -- reader authentication, consent, narrowing, deviceAuth, the proof, and HPKE
@@ -274,18 +275,17 @@ Each change is commented at its site. **Do not "restore" any of them.**
 3. **`circuit_id` is given a real `ZkSpecStruct`.** Theirs passes `malloc`'d
    memory with only `num_attributes` set; the rest is uninitialised.
 4. **The package logs nothing.** Theirs prints circuit loading and verification
-   progress with the standard logger.
+   progress with the standard logger. The library's OWN logger is also turned
+   down to ERROR at init — its default is INFO, at which every prove and verify
+   prints timing lines to stderr (logcat on Android). `set_log_level` is C++ in
+   namespace `proofs` and not in the installed C ABI, so the call takes a small
+   C++ shim: `longfellow/quiet.cc`, whose declarations mirror `util/log.h` at
+   the pinned commit and fail at link time if upstream ever changes them.
 
 ---
 
 ## Known gaps
 
-- **The library writes `[INFO]` timing lines to stdout.** Harmless in a test,
-  wrong in a wallet. Not yet suppressed.
-- **`MatchingSpec` prefers the newest version**, so the round-trip test picked
-  v7/1-attr rather than the v6 AV readers offer. Correct behaviour -- in a real
-  session the reader offers v6 and the intersection decides — but it means that
-  test is not exercising the profile's circuit.
 - **The sumcheck is 34% of prove and is not ours to change.** Profiled on device
   with `simpleperf`: `ProverLayers::layer` and its `Quad`/`Eqs` helpers dominate,
   and they are the GKR prover — the cryptography itself.

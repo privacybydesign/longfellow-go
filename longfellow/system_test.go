@@ -5,8 +5,10 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 
@@ -185,28 +187,74 @@ func mintProvableDocument(t testing.TB) (*mdoc.MDoc, mdoc.SessionTranscript) {
 // do. irmago mints the credential, mdoc.ProverSystem marshals it across the
 // boundary, this module proves it, and the proof verifies — all in one process,
 // with no file ever touching disk.
+//
+// One subtest per circuit revision held, not one call over everything:
+// MatchingSpec given the full set prefers the newest version, which would prove
+// under v7 and leave v6 — the revision AV readers actually offer — unexercised.
+// Narrowing the offer to a single revision is also the realistic shape: in a
+// session it is the intersection with the reader's offer that pins the version.
 func TestProveAndVerifyRoundTripThroughTheAdapter(t *testing.T) {
 	system := openSystem(t)
 	prover := mdoc.NewProverSystem(system)
 
-	document, transcript := mintProvableDocument(t)
+	versions := oneAttributeVersions(prover)
+	require.Contains(t, versions, int64(6),
+		"the circuit directory must carry a v6 one-attribute circuit, the one AV readers offer")
 
-	spec, ok := prover.MatchingSpec(prover.SystemSpecs(), 1)
-	require.True(t, ok, "a one-attribute circuit must be available")
+	for _, version := range versions {
+		t.Run(fmt.Sprintf("v%d", version), func(t *testing.T) {
+			document, transcript := mintProvableDocument(t)
 
-	start := time.Now()
-	zkDocument, err := prover.GenerateProof(spec, *document, transcript, time.Now())
-	require.NoError(t, err)
-	t.Logf("proved in %v, %d byte proof, circuit %s",
-		time.Since(start).Round(time.Millisecond), len(zkDocument.Proof), spec.ID)
+			spec, ok := prover.MatchingSpec(specsOfVersion(prover, version), 1)
+			require.True(t, ok)
 
-	require.NotEmpty(t, zkDocument.Proof)
-	require.Equal(t, spec.ID, zkDocument.DocumentData.ZkSystemSpecID)
-	require.Equal(t, "eu.europa.ec.av.1", zkDocument.DocumentData.DocType)
+			start := time.Now()
+			zkDocument, err := prover.GenerateProof(spec, *document, transcript, time.Now())
+			require.NoError(t, err)
+			t.Logf("proved in %v, %d byte proof, circuit %s",
+				time.Since(start).Round(time.Millisecond), len(zkDocument.Proof), spec.ID)
 
-	start = time.Now()
-	require.NoError(t, prover.VerifyProof(*zkDocument, spec, transcript))
-	t.Logf("verified in %v", time.Since(start).Round(time.Millisecond))
+			require.NotEmpty(t, zkDocument.Proof)
+			require.Equal(t, spec.ID, zkDocument.DocumentData.ZkSystemSpecID)
+			require.Equal(t, "eu.europa.ec.av.1", zkDocument.DocumentData.DocType)
+
+			start = time.Now()
+			require.NoError(t, prover.VerifyProof(*zkDocument, spec, transcript))
+			t.Logf("verified in %v", time.Since(start).Round(time.Millisecond))
+		})
+	}
+}
+
+// specsOfVersion narrows our own specs to one circuit revision, which is the
+// shape of a real reader's offer: the captured EUDI AV reader offers v6 only.
+func specsOfVersion(prover *mdoc.ProverSystem, version int64) []mdoc.ZkSystemSpec {
+	var specs []mdoc.ZkSystemSpec
+	for _, spec := range prover.SystemSpecs() {
+		if v, ok := spec.Version(); ok && v == version {
+			specs = append(specs, spec)
+		}
+	}
+	return specs
+}
+
+// oneAttributeVersions lists the circuit revisions that come with a
+// one-attribute circuit, oldest first.
+func oneAttributeVersions(prover *mdoc.ProverSystem) []int64 {
+	seen := map[int64]bool{}
+	var versions []int64
+	for _, spec := range prover.SystemSpecs() {
+		if count, ok := spec.NumAttributes(); !ok || count != 1 {
+			continue
+		}
+		version, ok := spec.Version()
+		if !ok || seen[version] {
+			continue
+		}
+		seen[version] = true
+		versions = append(versions, version)
+	}
+	sort.Slice(versions, func(i, j int) bool { return versions[i] < versions[j] })
+	return versions
 }
 
 // A verifier that accepts anything proves nothing.
