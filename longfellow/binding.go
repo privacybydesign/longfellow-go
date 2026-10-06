@@ -41,8 +41,18 @@ package longfellow
 // constraint on the first line is not redundant: Go treats GOOS=android as
 // satisfying the `linux` build constraint too, so `#cgo linux` alone would apply
 // to both and put -lstdc++ back on the Android link line.
+//
+// -static-libstdc++ on the Android line is load-bearing, and not a duplicate of
+// -lc++_static beside it. This package contains a C++ source file (quiet.cc),
+// and the Go toolchain links any package that does with the C++ driver rather
+// than the C one. The NDK's clang++ then links libc++_shared BY DEFAULT, which
+// writes a DT_NEEDED on libc++_shared.so into libgojni.so — a library nothing
+// packages into the APK. The app then dies on the first native call with
+// "dlopen failed: library libc++_shared.so not found", a stack trace naming
+// Seq.<clinit> and nothing about C++ at all. The flag makes the driver resolve
+// the runtime statically, which is what the archives beside it then satisfy.
 #cgo linux,!android LDFLAGS: -lstdc++
-#cgo android LDFLAGS: -lc++_static -lc++abi
+#cgo android LDFLAGS: -static-libstdc++ -lc++_static -lc++abi
 #cgo darwin LDFLAGS: -lc++
 
 #include <stdlib.h>
