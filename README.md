@@ -98,8 +98,10 @@ x86_64, in the container, v7/1-attribute circuit:
 | `Open`, compiled-in `MapCache` | **0 ms** |
 | a whole org-iso-mdoc session, request to sealed response | **847 ms** |
 
-21 tests green (the round trip proves once per circuit revision held, so the
-profile's v6 circuit is exercised as well as the newest).
+The suite is green in the container -- the round trip proves once per circuit
+revision held, so the profile's v6 circuit is exercised as well as the newest.
+Only `TestProfileWithFileCache` skips, and only when `LONGFELLOW_CACHE` names no
+path that persists between runs.
 
 The session figure is the interesting one: it is a complete `isomdoc.Session`
 -- reader authentication, consent, narrowing, deviceAuth, the proof, and HPKE
