@@ -21,6 +21,21 @@ set -euo pipefail
 export CGO_CFLAGS="${CGO_CFLAGS:--I${LONGFELLOW_INSTALL}/include}"
 export CGO_LDFLAGS="${CGO_LDFLAGS:--L${LONGFELLOW_INSTALL}/lib}"
 
+# This repository arrives as a bind mount owned by whoever checked it out, which
+# on a CI runner is not the user inside the container. git then refuses the
+# directory outright -- "fatal: detected dubious ownership", exit 128 -- and Go,
+# which shells out to git to stamp build metadata into any main package, turns
+# that into a build failure:
+#
+#   error obtaining VCS status: exit status 128
+#       Use -buildvcs=false to disable VCS stamping.
+#
+# Nothing built here is released, so the stamp buys nothing. Turning it off is
+# preferable to marking the mount safe.directory, which needs a writable HOME
+# the container user may not have, and which teaches git to trust a directory
+# only to recover a field no one reads.
+export GOFLAGS="${GOFLAGS:+${GOFLAGS} }-buildvcs=false"
+
 echo "==> library at ${LONGFELLOW_INSTALL}"
 test -f "${LONGFELLOW_INSTALL}/lib/libmdoc_static.a" || {
   echo "MISSING ${LONGFELLOW_INSTALL}/lib/libmdoc_static.a -- run build-longfellow.sh first"; exit 1; }

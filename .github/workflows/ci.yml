@@ -1,0 +1,168 @@
+# Builds the native library from source and runs both suites over it.
+#
+# Why this exists: irmago#724 Phase 1 asks for CI here, and until now there was
+# none. The module was verified only from the other side — irmago's
+# zk-integration workflow clones this repository and runs its suite against an
+# irmago commit — so a change pushed HERE was unverified until something else
+# happened to build it. That is backwards for the repository that owns the cgo
+# boundary, the patches and the build scripts.
+#
+# What it covers, and what it does not:
+#
+#   - the patches in patches/ still apply to the pinned longfellow-zk ref. The
+#     image build fails loudly if they do not, which is the signal that one of
+#     them landed upstream and the ref should move past it.
+#   - upstream's own test suite passes against the patched library. That suite
+#     includes Google's mdoc vectors (mdoc_examples.h, mdoc_zk_test.cc), which
+#     is the closest thing we have to Phase 1's "run tests against Google's own
+#     test vectors" gate. It is NOT the whole of it: those vectors are exercised
+#     at C++ level, never through this module's Go binding, and a fixture that
+#     closes that gap is still owed.
+#   - the Go module builds, vets and passes its suite with real circuits.
+#
+# Not covered: darwin/arm64, which Phase 1 also names. Nothing has ever built
+# this library on macOS, and CI is the wrong place to find out what breaks
+# first.
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  schedule:
+    # Monday 09:00 UTC, matching irmago's. The longfellow-zk ref is pinned, so
+    # this is not watching upstream: it catches drift underneath us — base image
+    # packages, the Go toolchain, the NDK-free parts of the dependency set —
+    # which otherwise surfaces on whichever unlucky commit is pushed next.
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The image is built ONCE, here, and the two suites below read it back out of
+  # the layer cache.
+  #
+  # Not built in each job: they would start together, both miss a cold cache and
+  # both spend twenty minutes compiling the same C++ — on exactly the commits
+  # that change the Dockerfile or the patches, which are the ones most likely to
+  # be iterated on.
+  #
+  # The key is the Dockerfile plus the patches, because those two decide every
+  # byte of the native build. Same scheme irmago's zk-integration uses, so a
+  # cache entry means the same thing in both places.
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      key: ${{ steps.compute.outputs.value }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: compute
+        run: echo "value=${{ runner.os }}-$(cat Dockerfile patches/*.patch | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          cache-from: type=gha,scope=${{ steps.compute.outputs.value }}
+          cache-to: type=gha,mode=max,scope=${{ steps.compute.outputs.value }}
+
+  # The Go side: builds, vets and runs the suite against circuits generated from
+  # the pinned library.
+  module:
+    needs: image
+    runs-on: ubuntu-latest
+    # ~20 minutes of C++ when the layer cache misses, which is every change to
+    # the Dockerfile or the patches and nothing else.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: longfellow-build:${{ needs.image.outputs.key }}
+          cache-from: type=gha,scope=${{ needs.image.outputs.key }}
+
+      # Circuits are an input to the proving tests and cannot all be built:
+      # generate_circuit emits only the library's newest revision, so the older
+      # ones deployed readers ask for are unobtainable from source. What CAN be
+      # generated is cached, since it depends on the pinned library alone.
+      - name: Restore generated circuits
+        id: circuits
+        uses: actions/cache@v4
+        with:
+          path: circuits
+          key: circuits-${{ needs.image.outputs.key }}
+
+      - name: Generate circuits
+        if: steps.circuits.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p circuits
+          docker run --rm \
+            -v "${PWD}:/work/longfellow-go" \
+            -v "${PWD}/circuits:/circuits" \
+            -w /work/longfellow-go \
+            longfellow-build:${{ needs.image.outputs.key }} \
+            generate-circuits.sh /circuits
+
+      # LONGFELLOW_STRICT turns a missing circuit directory into a failure.
+      # Without it an empty mount skips every proving test and reports green,
+      # which reads as coverage and is worse than not running at all.
+      #
+      # LONGFELLOW_CIRCUITS_GENERATED says only the newest revision is present,
+      # so tests needing an older one skip loudly. Grep the log for NOT COVERED.
+      #
+      # The scripts set GOFLAGS=-buildvcs=false themselves: this checkout is a
+      # bind mount owned by the runner user, git refuses it as dubious
+      # ownership, and Go turns that into "error obtaining VCS status: exit
+      # status 128" when it stamps a main package.
+      - name: Run the module suite
+        run: |
+          docker run --rm \
+            -v "${PWD}:/work/longfellow-go" \
+            -v "${PWD}/circuits:/circuits" \
+            -w /work/longfellow-go \
+            -e LONGFELLOW_CIRCUITS=/circuits \
+            -e LONGFELLOW_CIRCUITS_GENERATED=1 \
+            -e LONGFELLOW_STRICT=1 \
+            longfellow-build:${{ needs.image.outputs.key }} \
+            build-module.sh -v
+
+  # Upstream's own suite over the patched library. Separate from the module job
+  # because the two answer different questions: a failure here means the patches
+  # broke the library, a failure there means the binding is wrong. Reading one as
+  # the other wastes an afternoon.
+  library:
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v3
+
+      # cache-from only, here and in the module job: the image job above is the
+      # single writer of this scope. Two writers race and one loses its layers.
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: longfellow-build:${{ needs.image.outputs.key }}
+          cache-from: type=gha,scope=${{ needs.image.outputs.key }}
+
+      # JOBS stays at the script's default of 2. The ZK tests hold hundreds of
+      # megabytes each and a high -j does not degrade, it meets the OOM killer:
+      # measured at -j24, nine of 316 died as "Subprocess killed". Scale it to
+      # memory, never to cores, and a runner has less of both than a workstation.
+      - name: Run upstream's test suite
+        run: |
+          docker run --rm \
+            longfellow-build:${{ needs.image.outputs.key }} \
+            test-longfellow.sh

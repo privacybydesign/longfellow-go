@@ -28,6 +28,12 @@ fi
 export CGO_CFLAGS="${CGO_CFLAGS:--I${LONGFELLOW_INSTALL}/include}"
 export CGO_LDFLAGS="${CGO_LDFLAGS:--L${LONGFELLOW_INSTALL}/lib}"
 
+# `go run` builds a main package, so it stamps VCS metadata and dies on a bind
+# mount git will not claim: "error obtaining VCS status: exit status 128". The
+# long version of this is in build-module.sh. Both need it, and this script is
+# the one that hits it first in CI, on any run where the circuit cache misses.
+export GOFLAGS="${GOFLAGS:+${GOFLAGS} }-buildvcs=false"
+
 test -f "${LONGFELLOW_INSTALL}/lib/libmdoc_static.a" || {
   echo "MISSING ${LONGFELLOW_INSTALL}/lib/libmdoc_static.a -- run build-longfellow.sh first" >&2
   exit 1; }
