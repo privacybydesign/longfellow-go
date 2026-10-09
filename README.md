@@ -245,6 +245,61 @@ and the proof in the order A.8 requires. Three cases:
 - **the A.6 fallback**: same loop, wallet without a prover, and the reader
   accepts the plain signed disclosure instead.
 
+
+### And against a verifier that is not ours at all
+
+Everything above verifies with *our* verifier. A prover and a verifier built from
+the same source agree by construction, so the interesting question is whether a
+proof this wallet produced satisfies an implementation that shares no code with
+it.
+
+`longfellow/interop_live_test.go` answers it against **multipaz-verifier-server**
+— Kotlin, its own CBOR, and it rebuilds the session transcript from its own state
+rather than trusting ours. Four parties, no faked joins: `mdoc.TestIssuer` issues,
+`isomdoc.Session` is the wallet, this module proves, and their server checks.
+Their reply:
+
+```
+ZK proof         Successfully validated proof 🪄
+Namespace        eu.europa.ec.av.1
+age_over_18      true
+Issuer           Not in trust list (CN=Test Age Verification DS - 001,O=Yivi Test)
+```
+
+The test has to live here rather than in irmago for the same reason the rest of
+this file does: irmago cannot link a prover, so its own
+`eudi/isomdoc/interop_live_test.go` can only round-trip a **plain** presentation.
+
+It **skips** unless a verifier answers, so it is not part of any automated run —
+including irmago's `zk-integration.yml`, which stands up no verifier. Run it by
+hand:
+
+```
+docker compose --profile interop up --build -d multipaz-verifier   # in irmago
+
+docker run --rm -v "$PWD:/work" -w /work \
+  -v "<circuits>:/circuits:ro" \
+  -e LONGFELLOW_CIRCUITS=/circuits \
+  -e MULTIPAZ_VERIFIER_URL=http://host.docker.internal:8006 \
+  --add-host host.docker.internal:host-gateway \
+  longfellow-build go test ./longfellow/ -run TestLiveZkRoundTrip -v -count=1
+```
+
+Two things it pins that nothing else does:
+
+- **the spec-id convention agrees end to end.** Their request offers
+  `longfellow-libzk-v1_6_1_4096_2945_137e5a75…` and their verifier resolves the
+  id we echo back by exact string match. Ours is built in `mdoc.specForCircuit`,
+  theirs from the circuit's filename; nothing but this compares them.
+- **reader authentication does NOT happen, and cannot.** With `signRequest` their
+  server signs with `readerAuthAll`, the request-wide COSE_Sign1 from the 2025
+  edition of 18013-5; irmago implements the 2021 edition, which has one
+  `readerAuth` per `DocRequest` and no request-wide signature. So irmago
+  correctly reports the reader unauthenticated and releases nothing, and the test
+  discloses from `Requested` and asserts that situation rather than hiding it.
+  Reader auth is tracked as separate work; when it lands, those assertions fail
+  and the workaround in that file should go.
+
 ## The verified-hash cache
 
 Identifying a circuit costs ~1.2 s. Four v6 circuits — what the captured EUDI AV
