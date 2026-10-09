@@ -36,14 +36,30 @@ go vet ./...
 echo "==> build"
 go build ./...
 
-# Circuits cannot be generated -- generate_circuit only emits the library's
-# newest version while readers ask for older revisions -- so the round-trip tests
-# need a directory of them. Without one they skip rather than fail, and the load and
-# contract tests still run.
-if [ -n "${LONGFELLOW_CIRCUITS:-}" ]; then
-  echo "==> test (circuits: ${LONGFELLOW_CIRCUITS})"
-else
+# Circuits cannot all be generated -- generate_circuit emits only the library's
+# newest revision while readers ask for older ones -- so the proving tests need
+# a directory of them. Locally that is a checkout; in CI it is what
+# generate-circuits.sh produced.
+#
+# The default is to skip those tests when no directory is given, which keeps a
+# quick `go test` usable on a machine with no circuits. That default is wrong
+# for CI: a run that silently skips every proving test reports green while
+# testing none of them. So CI sets LONGFELLOW_STRICT=1 and the absence becomes
+# a failure.
+if [ -z "${LONGFELLOW_CIRCUITS:-}" ]; then
+  if [ "${LONGFELLOW_STRICT:-0}" = "1" ]; then
+    echo "LONGFELLOW_CIRCUITS is not set and LONGFELLOW_STRICT=1." >&2
+    echo "Every proving test would skip and this run would report green having proved nothing." >&2
+    echo "Run generate-circuits.sh first, or point LONGFELLOW_CIRCUITS at a circuit directory." >&2
+    exit 1
+  fi
   echo "==> test (no LONGFELLOW_CIRCUITS set: the proving tests will skip)"
+else
+  echo "==> test (circuits: ${LONGFELLOW_CIRCUITS})"
+  if [ "${LONGFELLOW_CIRCUITS_GENERATED:-0}" = "1" ]; then
+    echo "    generated from the pinned source: only the library's newest revision is present,"
+    echo "    so tests needing an older one skip. Look for NOT COVERED in the output."
+  fi
 fi
 go test ./longfellow/ -count=1 "$@"
 

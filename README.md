@@ -75,7 +75,36 @@ writes `-L../../install/lib`, which resolves only from its own directory in its
 own checkout; #724 asks for configurable paths, so they come from
 `CGO_CFLAGS`/`CGO_LDFLAGS`, which the image sets from `LONGFELLOW_INSTALL`.
 
-Without `LONGFELLOW_CIRCUITS` the proving tests skip rather than fail.
+Without `LONGFELLOW_CIRCUITS` the proving tests skip rather than fail. Set
+`LONGFELLOW_STRICT=1` to make the absence a failure instead -- CI does, because
+a run that silently skips every proving test reports green having proved nothing.
+
+### Circuits on a machine that has none
+
+```
+docker run --rm \
+  -v D:\Yivi\longfellow-go:/work/longfellow-go \
+  -v <out>:/circuits -w /work/longfellow-go \
+  longfellow-build generate-circuits.sh /circuits
+```
+
+`cmd/gencircuits` writes every circuit the pinned library can emit, then checks
+each one loads under the id its spec claims -- something only a generator can
+establish, since a loader sees just the bytes it was handed.
+
+**It cannot replace a circuit directory.** `generate_circuit` emits the
+library's newest revision only; every older one -- v6 included, the revision the
+captured EUDI AV reader offered -- is unobtainable from source. Readers
+reasonably lag the library, so that is the normal case rather than a v6 quirk,
+and it is the open half of #724 Phase 0 step 5.
+
+Pass `LONGFELLOW_CIRCUITS_GENERATED=1` alongside `LONGFELLOW_CIRCUITS` when the
+directory came from this tool. The tests that need an older revision then skip
+with a `NOT COVERED` line naming what was lost, rather than failing over an
+absence no machine can fix. It is an environment variable and not a marker file
+in the directory on purpose: `Open` would skip a dotfile, but not every reader of
+a circuit directory goes through `Open` -- the tests pick a file with `os.ReadDir`
+and copy `entries[0]`, so a marker sorting first gets copied AS a circuit.
 
 ### Why the image needed its own Go
 

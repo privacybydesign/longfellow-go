@@ -142,18 +142,40 @@ func zkDeviceRequest(t *testing.T, offered []mdoc.ZkSystemSpec, elements ...stri
 	return encoded
 }
 
-// v6Specs are the circuits an AV reader offers.
+// readerSpecs are the circuits an AV reader offers.
 //
 // The captured EUDI AV reader offered v6 only, one revision behind the library,
 // and we hold v7 as well -- so this is what makes the version intersection
 // decide something rather than being a formality. Note the profile pins the
 // SYSTEM (longfellow-libzk-v1), not the circuit revision; see the README.
-func v6Specs(t *testing.T, prover *mdoc.ProverSystem) []mdoc.ZkSystemSpec {
+//
+// A generated circuit directory has no v6 and cannot have one, so there the
+// offer falls back to the newest revision present. The session still runs end
+// to end; what stops being exercised is the intersection choosing an older
+// revision than the one we would prefer. That is said out loud rather than
+// quietly, because a formality that looks like a test is worse than a gap.
+func readerSpecs(t *testing.T, prover *mdoc.ProverSystem) []mdoc.ZkSystemSpec {
 	t.Helper()
 
-	offered := specsOfVersion(prover, 6)
-	require.NotEmpty(t, offered, "the circuit directory must carry v6 circuits")
-	return offered
+	if offered := specsOfVersion(prover, 6); len(offered) > 0 {
+		return offered
+	}
+
+	require.True(t, generatedCircuits(t), "the circuit directory must carry v6 circuits")
+
+	all := prover.SystemSpecs()
+	require.NotEmpty(t, all, "the circuit directory carries no circuits at all")
+
+	newest := int64(0)
+	for _, spec := range all {
+		if v, ok := spec.Version(); ok && v > newest {
+			newest = v
+		}
+	}
+	t.Logf("NOT COVERED: the reader offering an older revision than we hold. "+
+		"These circuits were generated from the pinned source, so the offer is v%d, "+
+		"the only revision present.", newest)
+	return specsOfVersion(prover, newest)
 }
 
 // TestSessionProducesAProofTheReaderCanVerify is the whole loop: a reader asks
@@ -180,7 +202,7 @@ func TestSessionProducesAProofTheReaderCanVerify(t *testing.T) {
 		Now:       func() time.Time { return time.Now() },
 	}
 
-	offered := v6Specs(t, prover)
+	offered := readerSpecs(t, prover)
 
 	start := time.Now()
 	sealed, err := session.Respond(isomdoc.Request{
@@ -252,7 +274,7 @@ func TestSessionProvesWhatWasDisclosedNotWhatWasRequested(t *testing.T) {
 		ZkSystems: mdoc.NewZkSystemRepository(prover),
 	}
 
-	offered := v6Specs(t, prover)
+	offered := readerSpecs(t, prover)
 
 	sealed, err := session.Respond(isomdoc.Request{
 		// Two elements asked for, one consented to.
@@ -301,7 +323,7 @@ func TestReaderRefusesAProofUnderAnUnacceptedCircuit(t *testing.T) {
 		ZkSystems: mdoc.NewZkSystemRepository(prover),
 	}
 
-	offered := v6Specs(t, prover)
+	offered := readerSpecs(t, prover)
 	sealed, err := session.Respond(isomdoc.Request{
 		DeviceRequest:  zkDeviceRequest(t, offered, "age_over_18"),
 		EncryptionInfo: reader.encryptionInfo,
@@ -445,7 +467,7 @@ func TestFullFlowThroughTheRelyingPartyEntryPoints(t *testing.T) {
 	document, holder, issuer := issueAVCredential(t,
 		map[string]any{"age_over_18": true}, "age_over_18")
 
-	relyingParty := flowReader(t, issuer, v6Specs(t, prover), systems)
+	relyingParty := flowReader(t, issuer, readerSpecs(t, prover), systems)
 	request, err := relyingParty.Build(testOrigin, avDocType, mdoc.DataElements{"age_over_18": false})
 	require.NoError(t, err)
 
@@ -493,7 +515,7 @@ func TestFullFlowRefusesAForeignIssuer(t *testing.T) {
 	stranger, err := mdoc.NewTestIssuer()
 	require.NoError(t, err)
 
-	relyingParty := flowReader(t, stranger, v6Specs(t, prover), systems)
+	relyingParty := flowReader(t, stranger, readerSpecs(t, prover), systems)
 	request, err := relyingParty.Build(testOrigin, avDocType, mdoc.DataElements{"age_over_18": false})
 	require.NoError(t, err)
 
@@ -523,7 +545,7 @@ func TestFullFlowFallsBackPlainThroughTheSameEntryPoints(t *testing.T) {
 	document, holder, issuer := issueAVCredential(t,
 		map[string]any{"age_over_18": true}, "age_over_18")
 
-	relyingParty := flowReader(t, issuer, v6Specs(t, prover), systems)
+	relyingParty := flowReader(t, issuer, readerSpecs(t, prover), systems)
 	request, err := relyingParty.Build(testOrigin, avDocType, mdoc.DataElements{"age_over_18": false})
 	require.NoError(t, err)
 

@@ -14,3 +14,9 @@ androidbench/bin/
 # ASSET on this repository, never in the tree: a .a in git would put a prebuilt
 # binary in the repo, which is exactly what #724 constraint 1 forbids.
 androidbench/dist/
+
+# Circuits written by scripts/generate-circuits.sh. They are build output of the
+# pinned library, regenerated in seconds, and committing them would put the same
+# prebuilt artefact in the tree that constraint 1 keeps out of it. CI caches them
+# instead, keyed on the longfellow-zk ref and the patches applied to it.
+build/
