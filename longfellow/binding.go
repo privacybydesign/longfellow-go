@@ -17,6 +17,10 @@
 //
 //   - run_mdoc_prover is bound as well. The reference service only verifies;
 //     a wallet is the half that proves, and #724 names this as the new part.
+//   - generate_circuit is bound as well, for the same reason in reverse: a
+//     machine with no circuit files -- CI being the case -- has only one
+//     provenance for a circuit that #724's constraints allow, the pinned
+//     source itself. It emits the library's newest revision only.
 //   - set_attribute refuses over-long input instead of silently clamping
 //     cbor_value to 64 bytes. A clamped value produces a perfectly valid proof
 //     about a value nobody requested, which for a credential is the wrong
@@ -42,15 +46,31 @@ package longfellow
 // satisfying the `linux` build constraint too, so `#cgo linux` alone would apply
 // to both and put -lstdc++ back on the Android link line.
 //
-// -static-libstdc++ on the Android line is load-bearing, and not a duplicate of
-// -lc++_static beside it. This package contains a C++ source file (quiet.cc),
-// and the Go toolchain links any package that does with the C++ driver rather
-// than the C one. The NDK's clang++ then links libc++_shared BY DEFAULT, which
-// writes a DT_NEEDED on libc++_shared.so into libgojni.so — a library nothing
-// packages into the APK. The app then dies on the first native call with
-// "dlopen failed: library libc++_shared.so not found", a stack trace naming
-// Seq.<clinit> and nothing about C++ at all. The flag makes the driver resolve
-// the runtime statically, which is what the archives beside it then satisfy.
+// -static-libstdc++ on the Android line is a guard, kept deliberately.
+//
+// The Go toolchain links any package containing a C++ source file with the C++
+// driver rather than the C one, and the NDK's clang++ then links libc++_shared
+// BY DEFAULT: a DT_NEEDED on libc++_shared.so goes into libgojni.so, nothing
+// packages that library into the APK, and the app dies on its first native call
+// with "dlopen failed: library libc++_shared.so not found" — a stack trace
+// naming Seq.<clinit> and saying nothing about C++ at all. This package had
+// such a file (quiet.cc, to silence the library's logger) and shipped exactly
+// that failure. The file is gone, replaced by the set_mdoc_log_level call in
+// init(), so the C driver is in use and the flag is not currently doing any
+// work.
+//
+// Measured rather than assumed: on 2026-10-09 the arm64 cross-link was built
+// both with and without the flag, and llvm-readelf -d reported the same three
+// entries each time — liblog, libdl, libc, no libc++_shared.
+//
+// It stays anyway. The archives below do not prevent that failure on their own,
+// only this flag does, and the day a .cc returns is not the day to rediscover
+// it through a startup crash whose stack trace names Seq.<clinit> and nothing
+// else. Re-measure the same way before concluding otherwise: compiling,
+// linking and every test in this module pass either way.
+//
+// The archives themselves are NOT optional either way: libmdoc_static.a is C++
+// whatever language calls into it, and it needs a C++ runtime to link against.
 #cgo linux,!android LDFLAGS: -lstdc++
 #cgo android LDFLAGS: -static-libstdc++ -lc++_static -lc++abi
 #cgo darwin LDFLAGS: -lc++
@@ -111,6 +131,22 @@ import (
 
 	"github.com/privacybydesign/irmago/eudi/credentials/mdoc/zk"
 )
+
+// The library's own logger defaults to INFO, at which proving and verifying
+// print progress and timing lines to stderr, which is logcat on Android. A
+// library embedded in a wallet has no business doing that, so it is turned
+// down before anything else in this package can run.
+//
+// ERROR rather than full silence: the enum has nothing below it, and a library
+// error is the one thing worth hearing about.
+//
+// set_mdoc_log_level is part of the installed C ABI as of
+// patches/0001-expose-logger-through-c-api.patch. It replaces a C++ shim that
+// redeclared proofs::set_log_level to reach the same function, which cost this
+// package a .cc file and the Android link trap described above.
+func init() {
+	C.set_mdoc_log_level(C.MdocLogLevel(C.MDOC_LOG_ERROR))
+}
 
 // systemName is the only ZK system this library implements.
 const systemName = "longfellow-libzk-v1"
@@ -234,6 +270,71 @@ func describe(spec *C.ZkSpecStruct, id string) zk.Circuit {
 		BlockEncHash:  int(spec.block_enc_hash),
 		BlockEncSig:   int(spec.block_enc_sig),
 		Hash:          id,
+	}
+}
+
+// LibrarySpecs lists every circuit this build of the library knows of, whether
+// or not a file for it exists anywhere. That is the difference from
+// System.Circuits, which lists what was actually loaded: this reads kZkSpecs,
+// the library's own hardcoded table, and that table is the only authority on
+// which circuits exist.
+//
+// The order is the table's, not a sorted one. A caller that shows it to anyone
+// should sort it itself.
+func LibrarySpecs() []zk.Circuit {
+	list := make([]zk.Circuit, 0, C.kNumZkSpecs)
+	for i := 0; i < C.kNumZkSpecs; i++ {
+		spec := &C.kZkSpecs[i]
+		list = append(list, describe(spec, C.GoString(&spec.circuit_hash[0])))
+	}
+	return list
+}
+
+// GenerateCircuit produces the compressed bytes of the circuit with the given
+// id, which is what a circuit file contains.
+//
+// It fails for every revision but the library's newest, by upstream's design:
+// "The generator only supports the latest version of the ZKSpec for a number of
+// attributes. Attempt to generate older circuits will result in an error."
+// Since readers reasonably lag the library, the revision a deployed reader asks
+// for is usually one this cannot produce -- which is why circuits are an asset
+// a wallet ships rather than something it builds.
+//
+// Expensive: on the order of ten seconds and hundreds of megabytes per circuit.
+// This is a build-time call, and nothing on a wallet's startup path may use it.
+func GenerateCircuit(id string) ([]byte, error) {
+	spec, ok := specFor(id)
+	if !ok {
+		return nil, fmt.Errorf("longfellow: no circuit spec with id %s", id)
+	}
+
+	var buffer *C.uint8_t
+	var length C.size_t
+
+	code := C.generate_circuit(spec, &buffer, &length)
+	if code != C.CIRCUIT_GENERATION_SUCCESS {
+		return nil, fmt.Errorf("longfellow: generate_circuit: %s", generationError(code))
+	}
+	if buffer == nil || length == 0 {
+		return nil, errors.New("longfellow: generate_circuit reported success but produced nothing")
+	}
+	defer C.free(unsafe.Pointer(buffer))
+
+	return C.GoBytes(unsafe.Pointer(buffer), C.int(length)), nil
+}
+
+func generationError(code C.CircuitGenerationErrorCode) string {
+	switch code {
+	case C.CIRCUIT_GENERATION_NULL_INPUT:
+		return "null input"
+	case C.CIRCUIT_GENERATION_ZLIB_FAILURE:
+		return "compression failed"
+	case C.CIRCUIT_GENERATION_GENERAL_FAILURE:
+		return "general failure"
+	case C.CIRCUIT_GENERATION_INVALID_ZK_SPEC_VERSION:
+		return "not the library's newest revision, which the generator cannot emit"
+	default:
+		return fmt.Sprintf("unknown error %d", int(code))
 	}
 }
 

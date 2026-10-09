@@ -178,9 +178,13 @@ echo "--- architecture ---"
 "${TOOLCHAIN}/bin/llvm-objdump" -a "${PREFIX}/lib/libmdoc_static.a" 2>/dev/null \
   | grep -m1 'file format' || true
 
-echo "--- the five C symbols ---"
+# Six, not five: set_mdoc_log_level comes from patches/, applied to the checkout
+# this image inherits from longfellow-build. Its absence means the patch did not
+# take, and the Go binding then has no way to silence the library without a C++
+# source file -- which is what puts libc++_shared into an Android link.
+echo "--- the six C symbols ---"
 "${TOOLCHAIN}/bin/llvm-nm" --defined-only "${PREFIX}/lib/libmdoc_static.a" 2>/dev/null \
-  | grep -E " T (run_mdoc_prover|run_mdoc_verifier|generate_circuit|find_zk_spec|circuit_id)$" \
+  | grep -E " T (run_mdoc_prover|run_mdoc_verifier|generate_circuit|find_zk_spec|circuit_id|set_mdoc_log_level)$" \
   | sort -u -k3 || echo "(none found -- inspect manually)"
 
 echo "==> done: ${PREFIX}"

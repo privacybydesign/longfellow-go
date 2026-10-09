@@ -1,0 +1,102 @@
+From 9808901947ab73aa019817c58f18ff50e0b86333 Mon Sep 17 00:00:00 2001
+From: Ashwin <AshwinKhan@student.tudelft.nl>
+Date: Fri, 9 Oct 2026 11:59:25 +0200
+Subject: Reserve the circuit's actual size, not the bound
+
+Before a circuit can be used it is decompressed into a buffer, and three
+places size that buffer with kCircuitSizeMax (130 MB) rather than with the
+file. The circuits in use decompress to 88-115 MB, so 15-42 MB is reserved
+for nothing.
+
+The cost is not merely address space. std::vector value-initialises, so
+every byte of the bound is written, which forces the kernel to back all
+130 MB with physical pages. The bound is paid in full on every call.
+
+zstd records the decompressed size in the frame header. Reading it and
+reserving exactly that keeps kCircuitSizeMax as what it should be, an
+acceptance limit, and stops it being an allocation size as well. One
+number was doing two jobs, and they pull in opposite directions: lowering
+it to save memory refuses legitimate circuits, raising it to accept larger
+ones wastes more.
+
+Measured on a Dimensity 8100, v6 1-attribute circuit: peak RSS 211.8 MB
+to 171.2 MB. Proving and verifying get slightly faster as a side effect,
+since the pages no longer have to be faulted in.
+---
+ lib/circuits/mdoc/mdoc_circuit_id.cc |  3 ++-
+ lib/circuits/mdoc/mdoc_decompress.cc | 16 ++++++++++++++++
+ lib/circuits/mdoc/mdoc_zk.cc         |  6 ++++--
+ 3 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/lib/circuits/mdoc/mdoc_circuit_id.cc b/lib/circuits/mdoc/mdoc_circuit_id.cc
+index b9ca1eb..7083431 100644
+--- a/lib/circuits/mdoc/mdoc_circuit_id.cc
++++ b/lib/circuits/mdoc/mdoc_circuit_id.cc
+@@ -48,7 +48,8 @@ int circuit_id(uint8_t id[/*kSHA256DigestSize*/], const uint8_t* bcp,
+   uint8_t cid[kSHA256DigestSize];
+ 
+   size_t len = kCircuitSizeMax;
+-  std::vector<uint8_t> bytes(len);
++  std::vector<uint8_t> bytes;  // sized by decompress from the frame header
++  (void)len;
+   size_t full_size = decompress(bytes, bcp, bcsz);
+ 
+   ReadBuffer rb_circuit(bytes.data(), full_size);
+diff --git a/lib/circuits/mdoc/mdoc_decompress.cc b/lib/circuits/mdoc/mdoc_decompress.cc
+index fcd6a5c..4bf3d64 100644
+--- a/lib/circuits/mdoc/mdoc_decompress.cc
++++ b/lib/circuits/mdoc/mdoc_decompress.cc
+@@ -21,6 +21,8 @@
+ #include "util/log.h"
+ #include "zstd.h"
+ 
++#include "circuits/mdoc/mdoc_zk.h"
++
+ namespace proofs {
+ 
+ // Decompress a circuit representation into a vector that has been reserved
+@@ -28,6 +30,20 @@ namespace proofs {
+ // the size of the uncompressed string.
+ size_t decompress(std::vector<uint8_t>& bytes, const uint8_t* compressed,
+                   size_t compressed_len) {
++  // Size the output buffer from the frame header rather than from the
++  // kCircuitSizeMax upper bound. Constructing a std::vector of that bound
++  // value-initialises 130 MB -- every page written, so every page resident --
++  // when the v6 circuit needs only 87.7 MB of it.
++  unsigned long long fcs = ZSTD_getFrameContentSize(compressed, compressed_len);
++  size_t want = kCircuitSizeMax;
++  if (fcs != ZSTD_CONTENTSIZE_ERROR && fcs != ZSTD_CONTENTSIZE_UNKNOWN &&
++      fcs <= (unsigned long long)kCircuitSizeMax) {
++    want = (size_t)fcs;
++  }
++  if (bytes.size() < want) {
++    bytes.resize(want);
++  }
++
+   size_t res =
+       ZSTD_decompress(bytes.data(), bytes.size(), compressed, compressed_len);
+ 
+diff --git a/lib/circuits/mdoc/mdoc_zk.cc b/lib/circuits/mdoc/mdoc_zk.cc
+index 3dd168e..7396a07 100644
+--- a/lib/circuits/mdoc/mdoc_zk.cc
++++ b/lib/circuits/mdoc/mdoc_zk.cc
+@@ -435,7 +435,8 @@ MdocProverErrorCode run_mdoc_prover(
+   std::unique_ptr<Circuit<f_128>> c_hash = nullptr;
+   /* scope for the bytes array */ {
+     size_t len = kCircuitSizeMax;
+-    std::vector<uint8_t> bytes(len);
++    std::vector<uint8_t> bytes;  // sized by decompress from the frame header
++    (void)len;
+     size_t full_size = decompress(bytes, bcp, bcsz);
+ 
+     if (full_size == 0) {
+@@ -597,7 +598,8 @@ MdocVerifierErrorCode run_mdoc_verifier(
+ 
+   // Parse circuits from cached byte representation.
+   size_t len = kCircuitSizeMax;
+-  std::vector<uint8_t> bytes(len);
++  std::vector<uint8_t> bytes;  // sized by decompress from the frame header
++  (void)len;
+   size_t full_size = decompress(bytes, bcp, bcsz);
+ 
+   // For now, we are not using the ZKSpec version anywhere and assuming no

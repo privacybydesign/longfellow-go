@@ -32,10 +32,28 @@ ABIS="${ABIS:-arm64-v8a armeabi-v7a x86_64}"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "${STAGE}"' EXIT
 
-# The version the tarball is named for: longfellow's own pinned commit, short.
-# Not a version we invent — what a consumer needs to know is which source this
-# came from, and nothing else identifies that.
-VERSION="${VERSION:-$(git -C "${SRC}" rev-parse --short HEAD)}"
+# The version the tarball is named for: longfellow's own pinned commit, short,
+# plus a digest of the patch set applied over it.
+#
+# The upstream commit ALONE is not enough, and relying on it was a real hazard.
+# patches/ is applied with `git apply`, which does not commit, so a patched
+# checkout still reports the pinned ref. A build from before the memory patches
+# landed and one from after would both be named for 61a8a73 while differing by
+# 50 MB of peak RSS and by a C symbol the Go binding now calls -- and a consumer
+# caching by name would never find out.
+#
+# So the name identifies the artefact, not one of its inputs. The digest is over
+# the patch files in glob order, which is exactly what the Dockerfile applies.
+PATCHES="${PATCHES:-/src/patches}"
+UPSTREAM="${UPSTREAM:-$(git -C "${SRC}" rev-parse --short HEAD)}"
+if compgen -G "${PATCHES}/*.patch" > /dev/null; then
+  PATCHSET="$(cat "${PATCHES}"/*.patch | sha256sum | cut -c1-8)"
+  VERSION="${VERSION:-${UPSTREAM}-p${PATCHSET}}"
+else
+  # No patches is a legitimate state: it is what this returns to once everything
+  # in patches/ is upstream and the pinned ref has moved past it.
+  VERSION="${VERSION:-${UPSTREAM}}"
+fi
 NAME="longfellow-${VERSION}-android"
 
 echo "==> packaging ${NAME} for: ${ABIS}"
@@ -64,6 +82,28 @@ done
 # tree's other headers are gtest's, gmock's, benchmark's and OpenSSL's, none of
 # which any consumer of this tarball compiles against.
 cp "${SRC}/lib/circuits/mdoc/mdoc_zk.h" "${STAGE}/android/include/"
+
+# A manifest, so the artefact describes itself rather than relying on its
+# filename surviving a download. Anyone holding a stray tarball can answer "which
+# source, which patches" without guessing from the name.
+{
+  echo "longfellow-zk android static libraries"
+  echo
+  echo "upstream:  https://github.com/longfellow-zk/longfellow-zk"
+  echo "commit:    $(git -C "${SRC}" rev-parse HEAD)"
+  echo "abis:      ${ABIS}"
+  echo
+  if compgen -G "${PATCHES}/*.patch" > /dev/null; then
+    echo "patches applied over that commit, in this order:"
+    for p in "${PATCHES}"/*.patch; do
+      echo "  $(sha256sum "$p" | cut -c1-16)  $(basename "$p")"
+    done
+    echo
+    echo "patch set digest: ${PATCHSET}"
+  else
+    echo "patches applied: none"
+  fi
+} > "${STAGE}/android/MANIFEST.txt"
 
 mkdir -p "${OUT}"
 tar -czf "${OUT}/${NAME}.tar.gz" -C "${STAGE}" android

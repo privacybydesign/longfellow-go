@@ -14,6 +14,19 @@
 # the library they link, is the only way to attribute a difference to the patches
 # rather than to the platform.
 #
+# THAT COMPARISON IS DONE, AND THIS SCRIPT NO LONGER RUNS AS WRITTEN.
+#
+# Its results are in androidbench/results/cold-runs.csv, under a Variant column,
+# and they are what justified shipping the memory patches. Those patches now
+# live in patches/ and are applied by the Dockerfile, so ${SRC} arrives already
+# carrying them: the replace.pl calls below will die with "found 0 occurrences".
+# That failure is the correct behaviour -- loudly wrong beats silently building
+# two identical libraries and reporting that the patches achieve nothing.
+#
+# To redo the comparison, build the baseline from a checkout with patches 0002
+# and 0003 reverted (git apply -R) and leave 0001 in place: it exposes a C entry
+# point and has no bearing on memory.
+#
 # Everything here is a build. The device is needed only to RUN the output.
 set -euo pipefail
 

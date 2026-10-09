@@ -23,3 +23,9 @@ go.mod      text eol=lf
 *.md        text eol=lf
 *.csv       text eol=lf
 *.txt       text eol=lf
+
+# patches/: applied by `git apply` inside the container against LF source. A
+# CRLF patch fails with "patch does not apply" on context lines that are
+# byte-identical apart from the line ending, which reads as an upstream drift
+# that has not happened.
+*.patch     text eol=lf

@@ -18,6 +18,7 @@ than a preference.
 | `longfellow/` | **the module** — implements irmago's `zk.System` interfaces. The deliverable. |
 | `cmd/genmapcache` | generates a compiled-in `MapCache` from a circuit directory, so an app that bundles circuits does not pay ~1.2 s per circuit at every launch. |
 | `Dockerfile`, `Dockerfile.android`, `scripts/` | the from-source builds: the library (x86_64 and per-ABI Android), the module, the on-device harness, and the release tarball. |
+| `patches/` | changes submitted upstream but not yet in a ref we can pin, applied to the checkout at image-build time. See below. |
 | `memprofile/` | peak-RSS measurement and two upstream patches. See its own README. |
 | `androidbench/` | the on-device harness and its measurement record. Binaries and the release tarball are build outputs and stay out of the tree. |
 
@@ -279,10 +280,36 @@ Each change is commented at its site. **Do not "restore" any of them.**
 4. **The package logs nothing.** Theirs prints circuit loading and verification
    progress with the standard logger. The library's OWN logger is also turned
    down to ERROR at init — its default is INFO, at which every prove and verify
-   prints timing lines to stderr (logcat on Android). `set_log_level` is C++ in
-   namespace `proofs` and not in the installed C ABI, so the call takes a small
-   C++ shim: `longfellow/quiet.cc`, whose declarations mirror `util/log.h` at
-   the pinned commit and fail at link time if upstream ever changes them.
+   prints timing lines to stderr (logcat on Android). The call goes through
+   `set_mdoc_log_level`, which `patches/0001-expose-logger-through-c-api.patch`
+   adds to the installed C ABI. Before that patch the only way to reach the
+   logger was a C++ shim redeclaring `proofs::set_log_level`, which put a `.cc`
+   file in this package and brought the Android link trap below with it.
+
+---
+
+## patches/
+
+Changes submitted upstream but not yet in a ref we can pin. The Dockerfile
+applies each one to the pinned checkout before building, so the library is
+still built from upstream's own source at a named commit and the delta stays
+one reviewable file rather than a fork nobody tracks. A patch that stops
+applying after a ref bump fails the image build: that is the signal to check
+whether it landed upstream and, if it did, to delete the file and bump the ref.
+
+| Patch | Why it is carried |
+| --- | --- |
+| `0001-expose-logger-through-c-api.patch` | Adds `set_mdoc_log_level` to the C ABI, so the library's logger can be turned down without a C++ translation unit in this package. **No Go package here contains C++ source, and that is a property worth keeping** — see the first trap below for what it costs to lose it. |
+| `0002-reserve-the-circuits-actual-size.patch` | Sizes the decompression buffer from the zstd frame header instead of `kCircuitSizeMax`. The bound is 130 MB and `std::vector` value-initialises, so every byte of it was being touched on every call. |
+| `0003-free-the-verifiers-circuit-early.patch` | Scopes the verifier's decompressed circuit the way the prover already scopes its own, instead of holding it for the whole verification. |
+
+**0002 and 0003 are the memory fixes, and until 2026-10-09 they did not ship.**
+They existed only as `replace.pl` blocks in `memprofile/`, applied by two
+measurement scripts and by nothing on the path that builds the libraries a
+wallet links. The A/B that justified them is in
+`androidbench/results/cold-runs.csv`: with the v7 circuit the wallet actually
+uses, `baseline` peaks at **215.2 MB** and `patched` at **165.0 MB**. Moving
+them here is what makes the shipped library the measured one.
 
 ---
 
@@ -317,9 +344,10 @@ Result, measured:
 
 | | |
 |---|---|
-| `libmdoc_static.a` | `elf64-littleaarch64`, all five C symbols exported |
+| `libmdoc_static.a` | `elf64-littleaarch64`, all six C symbols exported |
 | the Go module | builds **and links** for `GOOS=android GOARCH=arm64` |
-| linked test binary | ELF64 / AArch64, 20.5 MB |
+| linked test binary | ELF64 / AArch64, 22.7 MB (22,689,120 bytes) |
+| its `DT_NEEDED` | `liblog`, `libdl`, `libc` — **no `libc++_shared`** |
 
 `build-longfellow-android.sh` is adapted from upstream's own `android.sh`, with
 four changes: the NDK toolchain path is `linux-x86_64` rather than
@@ -340,8 +368,14 @@ stop the driver adding the shared runtime. Hence `-static-libstdc++` beside it;
 the two look redundant and are not. This cost an afternoon when `quiet.cc`
 landed: the wallet died at startup with `UnsatisfiedLinkError ... libc++_shared.so`
 and a stack trace naming `Seq.<clinit>` and nothing about C++, while
-`bind_go.sh`, `go vet` and this module's whole test suite all passed. Verify at
-the binary level after touching anything in the cgo package:
+`bind_go.sh`, `go vet` and this module's whole test suite all passed.
+
+That file is gone — the logger is reached through the C ABI now, so the C
+driver is in use and `-static-libstdc++` is not currently doing any work. It
+stays as a guard, because the archives do not prevent the failure on their own
+and the day a `.cc` returns is not the day to rediscover that. **Adding any C++
+source to a Go package here re-arms the trap.** Verify at the binary level
+after touching anything in the cgo package:
 
     readelf -d <aar>/jni/arm64-v8a/libgojni.so | grep NEEDED
     # liblog, libandroid, libm, libdl, libc.  libc++_shared = broken.

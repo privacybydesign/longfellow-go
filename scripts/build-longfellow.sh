@@ -40,8 +40,14 @@ echo "==> checking the C ABI is exported, circuit_id included"
 # hash verification was thought impossible. Google's own Go code calls it, so a
 # source build should have it. If this list is short, say so rather than
 # assuming.
+#
+# set_mdoc_log_level is NOT upstream yet: it comes from patches/, applied by the
+# Dockerfile. Its absence from this list means the patch did not take, which
+# costs the Go binding its only way to silence the library without a C++ source
+# file of its own -- and such a file is what drags libc++_shared into an Android
+# link. Six symbols expected here, not five.
 nm --defined-only "${PREFIX}/lib/libmdoc_static.a" 2>/dev/null \
-  | grep -E " T (run_mdoc_prover|run_mdoc_verifier|generate_circuit|find_zk_spec|circuit_id)$" \
+  | grep -E " T (run_mdoc_prover|run_mdoc_verifier|generate_circuit|find_zk_spec|circuit_id|set_mdoc_log_level)$" \
   | sort -u -k3 || echo "(none found -- inspect manually)"
 
 echo "==> done: ${PREFIX}"

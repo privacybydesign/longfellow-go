@@ -1,0 +1,81 @@
+From f5f3efa6a24626125e41664bc44a1c1e99f76c28 Mon Sep 17 00:00:00 2001
+From: Ashwin <AshwinKhan@student.tudelft.nl>
+Date: Fri, 9 Oct 2026 09:55:11 +0200
+Subject: Expose the logger through the C API
+
+The library logs to stderr at INFO by default, so every prove and verify
+prints progress and timing lines. An application that embeds this library
+as a component generally wants those off; on Android they land in logcat.
+
+proofs::set_log_level already does this, and circuit_maker.cc calls it, but
+it is unreachable from outside: the install tree ships mdoc_zk.h alone, and
+a C or cgo caller cannot declare a function in a C++ namespace. Callers
+have had to add a C++ translation unit of their own that redeclares the
+namespace and the enum, purely to make one call. For a cgo caller that is
+worse than it sounds, because a package containing any C++ source is linked
+with the C++ driver, which on the Android NDK adds a dependency on
+libc++_shared that an otherwise statically linked application does not ship.
+
+set_mdoc_log_level is the same function behind the existing extern "C"
+block. MdocLogLevel mirrors proofs::LogLevel, since util/log.h is not
+installed either; static_asserts keep the two in step.
+---
+ lib/circuits/mdoc/mdoc_zk.cc | 13 +++++++++++++
+ lib/circuits/mdoc/mdoc_zk.h  | 21 +++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/lib/circuits/mdoc/mdoc_zk.cc b/lib/circuits/mdoc/mdoc_zk.cc
+index 3dd168e..c089822 100644
+--- a/lib/circuits/mdoc/mdoc_zk.cc
++++ b/lib/circuits/mdoc/mdoc_zk.cc
+@@ -708,5 +708,18 @@ MdocVerifierErrorCode run_mdoc_verifier(
+   return ok && ok2 ? MDOC_VERIFIER_SUCCESS : MDOC_VERIFIER_GENERAL_FAILURE;
+ }
+ 
++// Exposes the logger to callers of the C API. The enum is redeclared in
++// mdoc_zk.h rather than included from util/log.h, which is not installed, so
++// the two are kept in step by the static_asserts below.
++void set_mdoc_log_level(MdocLogLevel level) {
++  static_assert(static_cast<int>(MDOC_LOG_ERROR) == static_cast<int>(ERROR),
++                "MdocLogLevel and proofs::LogLevel disagree on ERROR");
++  static_assert(static_cast<int>(MDOC_LOG_WARNING) == static_cast<int>(WARNING),
++                "MdocLogLevel and proofs::LogLevel disagree on WARNING");
++  static_assert(static_cast<int>(MDOC_LOG_INFO) == static_cast<int>(INFO),
++                "MdocLogLevel and proofs::LogLevel disagree on INFO");
++  set_log_level(static_cast<LogLevel>(level));
++}
++
+ } /* extern "C" */
+ }  // namespace proofs
+diff --git a/lib/circuits/mdoc/mdoc_zk.h b/lib/circuits/mdoc/mdoc_zk.h
+index 9985ea5..e505e7e 100644
+--- a/lib/circuits/mdoc/mdoc_zk.h
++++ b/lib/circuits/mdoc/mdoc_zk.h
+@@ -204,6 +204,27 @@ extern const ZkSpecStruct kZkSpecs[kNumZkSpecs];
+ const ZkSpecStruct* find_zk_spec(const char* system_name,
+                                  const char* circuit_hash);
+ 
++// Verbosity levels for set_mdoc_log_level, mirroring the levels of the
++// library's own logger. A level enables itself and everything more severe, so
++// MDOC_LOG_WARNING prints warnings and errors but not progress messages.
++typedef enum {
++  MDOC_LOG_ERROR = 1,
++  MDOC_LOG_WARNING = 10,
++  MDOC_LOG_INFO = 100,
++} MdocLogLevel;
++
++// Sets the verbosity of the library's logger, which writes to stderr and
++// defaults to MDOC_LOG_INFO. At that level every prove and verify prints
++// progress and timing lines, which is useful in a tool and unwanted in an
++// application embedding this library as a component; on Android those lines
++// go to logcat. The setting is process-global, so a caller wanting silence
++// should apply it before the first prove or verify.
++//
++// This is the C equivalent of proofs::set_log_level, which a caller outside
++// the library cannot reach: the install tree ships mdoc_zk.h alone, so C and
++// cgo callers have no declaration for a function in a C++ namespace.
++void set_mdoc_log_level(MdocLogLevel level);
++
+ #ifdef __cplusplus
+ }
+ 

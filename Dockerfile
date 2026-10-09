@@ -29,6 +29,23 @@ ARG LONGFELLOW_REF=61a8a735964d1b22bccf79bf14ef6767249cdf92
 RUN git clone https://github.com/google/longfellow-zk.git /src/longfellow-zk \
     && git -C /src/longfellow-zk checkout --quiet "${LONGFELLOW_REF}"
 
+# patches/ holds changes submitted upstream but not released yet. Each is
+# applied here against the pinned ref above, and deleted from this repository
+# once a ref containing it is pinned instead.
+#
+# Applying rather than forking keeps #724's constraint intact: the library is
+# still built from upstream's own source at a named commit, and the delta is one
+# reviewable file rather than a fork nobody tracks.
+#
+# A patch that stops applying after a ref bump fails the image build, which is
+# the signal to check whether it landed upstream. That is the intended
+# behaviour, not an inconvenience to work around.
+COPY patches/ /src/patches/
+RUN for p in /src/patches/*.patch; do \
+      echo "==> applying $(basename "$p")"; \
+      git -C /src/longfellow-zk apply --verbose "$p"; \
+    done
+
 COPY scripts/ /usr/local/bin/
 RUN chmod +x /usr/local/bin/*.sh
 
