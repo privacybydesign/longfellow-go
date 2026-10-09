@@ -16,10 +16,12 @@ than a preference.
 | | |
 |---|---|
 | `longfellow/` | **the module** — implements irmago's `zk.System` interfaces. The deliverable. |
+| `cmd/gencircuits` | writes every circuit the pinned library can emit, for a machine that has none. Cannot produce older revisions -- see below. |
 | `cmd/genmapcache` | generates a compiled-in `MapCache` from a circuit directory, so an app that bundles circuits does not pay ~1.2 s per circuit at every launch. |
 | `Dockerfile`, `Dockerfile.android`, `scripts/` | the from-source builds: the library (x86_64 and per-ABI Android), the module, the on-device harness, and the release tarball. |
+| `.github/workflows/ci.yml` | builds the library from source and runs both suites over it: this module's and upstream's own. irmago runs a complementary job -- see below. |
 | `patches/` | changes submitted upstream but not yet in a ref we can pin, applied to the checkout at image-build time. See below. |
-| `memprofile/` | peak-RSS measurement and two upstream patches. See its own README. |
+| `memprofile/` | peak-RSS measurement: the A/B harness behind the two memory patches, which now ship from `patches/`. See its own README. |
 | `androidbench/` | the on-device harness and its measurement record. Binaries and the release tarball are build outputs and stay out of the tree. |
 
 ---
@@ -105,6 +107,34 @@ absence no machine can fix. It is an environment variable and not a marker file
 in the directory on purpose: `Open` would skip a dotfile, but not every reader of
 a circuit directory goes through `Open` -- the tests pick a file with `os.ReadDir`
 and copy `entries[0]`, so a marker sorting first gets copied AS a circuit.
+
+### Two CI workflows, and why neither replaces the other
+
+`.github/workflows/ci.yml` here and `zk-integration.yml` in irmago both end up
+running `build-module.sh`. That looks like duplication and is not: they hold
+different halves still.
+
+| | this repo's `ci.yml` | irmago's `zk-integration.yml` |
+| --- | --- | --- |
+| irmago | the **pinned** one, from `go.mod` | the **commit under test**, via a `replace` made inside the job |
+| this module | the commit under test | whatever is on `main` |
+| fires on | pushes and PRs here | pushes and PRs there |
+
+One varies this module against a fixed irmago; the other varies irmago against a
+fixed module. Drop irmago's and a rename there breaks the prover silently --
+`NewHolder` to `GenerateDeviceSigner`, the DC API move into `isomdoc` and
+`VerifyZkDocument`'s extra argument were all found weeks late, which is why that
+job exists. Drop this one and a change pushed HERE is unverified until some
+unrelated irmago commit happens to build it.
+
+Only this workflow runs upstream's own ctest suite (`test-longfellow.sh`), which
+carries Google's mdoc vectors. Both build the image, so both catch a patch that
+stopped applying -- but only on their own repository's schedule.
+
+The image cache is keyed identically in both (`Dockerfile` plus `patches/*.patch`)
+so an entry means the same thing in each. It is NOT shared: Actions caches are
+scoped per repository, so the ~20 minute C++ build is paid once in each, then
+cached until the pinned ref or the patches move.
 
 ### Why the image needed its own Go
 
@@ -270,8 +300,8 @@ The test has to live here rather than in irmago for the same reason the rest of
 this file does: irmago cannot link a prover, so its own
 `eudi/isomdoc/interop_live_test.go` can only round-trip a **plain** presentation.
 
-It **skips** unless a verifier answers, so it is not part of any automated run —
-including irmago's `zk-integration.yml`, which stands up no verifier. Run it by
+It **skips** unless a verifier answers, so no automated run covers it: neither
+this repository's `ci.yml` nor irmago's `zk-integration.yml` stands one up. Run it by
 hand:
 
 ```
@@ -546,15 +576,24 @@ SHA-256.
 `scripts/package-android-libs.sh` produces the same shape:
 
 ```
-longfellow-<commit>-android.tar.gz
+longfellow-<commit>-p<patchset>-android.tar.gz
   android/include/…           headers, shared across ABIs
   android/<abi>/lib/*.a       arm64-v8a · armeabi-v7a · x86_64
+  android/MANIFEST.txt        the commit, and every patch applied over it
 ```
 
 so adding longfellow to a wallet build is a second set of flags on invocations
-that already exist, not new machinery. The tarball is named for longfellow's
-pinned commit rather than a version we invent: what a consumer needs to know is
-which source it came from.
+that already exist, not new machinery — which is what irmamobile's `bind_go.sh`
+now does, pinning `LONGFELLOW_VERSION` and the published `.sha256` beside the
+SQLCipher pair it already carried.
+
+The name is built from longfellow's pinned commit rather than a version we
+invent, plus an eight-character digest of `patches/` when there are any: what a
+consumer needs to know is which source it came from, and `patches/` is applied
+with `git apply`, so a patched checkout still reports the pinned ref and two
+builds of one commit would otherwise be indistinguishable. The `-p<patchset>`
+half disappears once `patches/` is empty, which is the state this returns to as
+each patch lands upstream.
 
 ### Where the tarball lives, and why that is not a repo
 
