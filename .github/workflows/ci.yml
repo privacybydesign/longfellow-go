@@ -12,13 +12,13 @@
 #   - the patches in patches/ still apply to the pinned longfellow-zk ref. The
 #     image build fails loudly if they do not, which is the signal that one of
 #     them landed upstream and the ref should move past it.
-#   - upstream's own test suite passes against the patched library. That suite
-#     includes Google's mdoc vectors (mdoc_examples.h, mdoc_zk_test.cc), which
-#     is the closest thing we have to Phase 1's "run tests against Google's own
-#     test vectors" gate. It is NOT the whole of it: those vectors are exercised
-#     at C++ level, never through this module's Go binding, and a fixture that
-#     closes that gap is still owed.
-#   - the Go module builds, vets and passes its suite with real circuits.
+#   - upstream's own test suite passes against the patched library, which
+#     exercises Google's mdoc vectors at C++ level.
+#   - the Go module builds, vets and passes its suite with real circuits. That
+#     now includes proving and verifying over one of those same Google vectors
+#     THROUGH the binding (longfellow/google_vector_test.go), which is the half
+#     of Phase 1's gate upstream's ctest cannot speak to: it runs their
+#     credential bytes against our reading of a DeviceResponse.
 #
 # Not covered: darwin/arm64, which Phase 1 also names. Nothing has ever built
 # this library on macOS, and CI is the wrong place to find out what breaks
