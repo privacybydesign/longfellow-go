@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"testing"
 	"time"
 
@@ -284,7 +284,7 @@ func oneAttributeVersions(prover *mdoc.ProverSystem) []int64 {
 		seen[version] = true
 		versions = append(versions, version)
 	}
-	sort.Slice(versions, func(i, j int) bool { return versions[i] < versions[j] })
+	slices.Sort(versions)
 	return versions
 }
 

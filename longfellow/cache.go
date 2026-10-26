@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"sync"
@@ -124,9 +125,7 @@ func OpenFileCache(path string) *FileCache {
 	if err := json.Unmarshal(content, &stored); err != nil || stored.Version != cacheFormatVersion {
 		return cache
 	}
-	for digest, id := range stored.Circuits {
-		cache.entries[digest] = id
-	}
+	maps.Copy(cache.entries, stored.Circuits)
 	return cache
 }
 
@@ -190,8 +189,6 @@ func (c *FileCache) Entries() map[string]string {
 	defer c.mutex.RUnlock()
 
 	copied := make(map[string]string, len(c.entries))
-	for digest, id := range c.entries {
-		copied[digest] = id
-	}
+	maps.Copy(copied, c.entries)
 	return copied
 }
