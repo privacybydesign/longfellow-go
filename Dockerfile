@@ -12,7 +12,7 @@
 # Constraint this exists to satisfy (#724): "No prebuilt binaries may enter the
 # repo or the module graph." Everything here is built from source at a pinned
 # commit.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # Exactly the dependency set longfellow-zk's README names for Debian/Ubuntu,
 # plus git to fetch it and golang to build the binding against it.
