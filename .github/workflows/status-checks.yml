@@ -1,0 +1,91 @@
+# Status checks, using the shared workflows from privacybydesign/github-workflows.
+# The gate job "Status checks passed" is the one check to require.
+name: Status checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  # The binding is cgo over libmdoc_static.a and mdoc_zk.h, which exist only in
+  # the image ./Dockerfile builds from the pinned longfellow-zk source plus
+  # patches/. Without that header the longfellow package cannot be type-checked,
+  # so `go fix`, golangci-lint and govulncheck run inside that image as part of
+  # the test command; gofmt and `go mod tidy` run natively.
+  go:
+    uses: privacybydesign/github-workflows/.github/workflows/go-checks.yml@v1
+    permissions:
+      contents: read
+    with:
+      working-directory: .
+      check-go-fix: false # runs in the build image, below
+      lint: false # runs in the build image, below
+      govulncheck: false # runs in the build image, below
+      timeout-minutes: 60 # a cold image build compiles longfellow-zk from source
+      test-command: |
+        docker build --tag longfellow-build .
+        mkdir -p circuits "$RUNNER_TEMP/go" "$RUNNER_TEMP/cache"
+        in_image() {
+          docker run --rm -w /work/longfellow-go \
+            -v "$PWD:/work/longfellow-go" -v "$PWD/circuits:/circuits" \
+            -v "$RUNNER_TEMP/go:/root/go" -v "$RUNNER_TEMP/cache:/root/.cache" \
+            longfellow-build "$@"
+        }
+
+        # -buildvcs=false: git refuses the bind mount as dubious ownership (see
+        # scripts/build-module.sh). The scripts below set it themselves.
+        echo "==> go fix"
+        in_image env GOFLAGS=-buildvcs=false go fix ./...
+        git diff --exit-code || { echo "::error::Run 'go fix ./...' in the build image and commit the result."; exit 1; }
+        echo "==> golangci-lint"
+        in_image env GOFLAGS=-buildvcs=false go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 run --timeout 5m
+        echo "==> govulncheck"
+        in_image env GOFLAGS=-buildvcs=false go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+        # The module suite, with circuits generated from the pinned library (its
+        # newest revision only). LONGFELLOW_STRICT turns a missing circuit
+        # directory into a failure instead of skipping every proving test;
+        # LONGFELLOW_CIRCUITS_GENERATED makes tests that need an older revision
+        # skip loudly (grep the log for NOT COVERED).
+        in_image generate-circuits.sh /circuits
+        in_image env LONGFELLOW_CIRCUITS=/circuits LONGFELLOW_CIRCUITS_GENERATED=1 LONGFELLOW_STRICT=1 \
+          build-module.sh -v
+
+        # Upstream's own suite over the patched library. JOBS stays at the
+        # script's default of 2: the ZK tests are memory-bound, see
+        # scripts/test-longfellow.sh before raising it.
+        docker run --rm longfellow-build test-longfellow.sh
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    uses: privacybydesign/github-workflows/.github/workflows/dependency-review.yml@v1
+    permissions:
+      contents: read
+      pull-requests: write
+
+  workflow-lint:
+    uses: privacybydesign/github-workflows/.github/workflows/workflow-lint.yml@v1
+    permissions:
+      contents: read
+
+  passed:
+    name: Status checks passed
+    if: always()
+    needs: [go, dependency-review, workflow-lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: All required jobs succeeded
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS"
+          if grep -qE '"(failure|cancelled)"' <<< "$RESULTS"; then exit 1; fi

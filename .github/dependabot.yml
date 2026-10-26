@@ -1,0 +1,29 @@
+# Updates are grouped (one PR per ecosystem) and wait 7 days after a release
+# (cooldown) so compromised releases are usually yanked before they reach us.
+# Security updates are not delayed.
+version: 2
+updates:
+  - package-ecosystem: github-actions # also bumps the shared workflows
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      actions: { patterns: ["*"] }
+    cooldown: { default-days: 7 }
+
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      docker: { patterns: ["*"] }
+    ignore:
+      # Dockerfile.android builds FROM the local image ./Dockerfile produces;
+      # it is not on any registry.
+      - dependency-name: longfellow-build
+    cooldown: { default-days: 7 }
+
+  - package-ecosystem: gomod
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      go: { patterns: ["*"], update-types: [minor, patch] }
+    cooldown: { default-days: 7 }
