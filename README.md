@@ -19,7 +19,7 @@ than a preference.
 | `cmd/gencircuits` | writes every circuit the pinned library can emit, for a machine that has none. Cannot produce older revisions -- see below. |
 | `cmd/genmapcache` | generates a compiled-in `MapCache` from a circuit directory, so an app that bundles circuits does not pay ~1.2 s per circuit at every launch. |
 | `Dockerfile`, `Dockerfile.android`, `scripts/` | the from-source builds: the library (x86_64 and per-ABI Android), the module, the on-device harness, and the release tarball. |
-| `.github/workflows/ci.yml` | builds the library from source and runs both suites over it: this module's and upstream's own. irmago runs a complementary job -- see below. |
+| `.github/workflows/status-checks.yml` | builds the library from source and runs both suites over it: this module's and upstream's own. irmago runs a complementary job -- see below. |
 | `patches/` | changes submitted upstream but not yet in a ref we can pin, applied to the checkout at image-build time. See below. |
 | `memprofile/` | peak-RSS measurement: the A/B harness behind the two memory patches, which now ship from `patches/`. See its own README. |
 | `androidbench/` | the on-device harness and its measurement record. Binaries and the release tarball are build outputs and stay out of the tree. |
@@ -110,11 +110,11 @@ and copy `entries[0]`, so a marker sorting first gets copied AS a circuit.
 
 ### Two CI workflows, and why neither replaces the other
 
-`.github/workflows/ci.yml` here and `zk-integration.yml` in irmago both end up
+`.github/workflows/status-checks.yml` here and `zk-integration.yml` in irmago both end up
 running `build-module.sh`. That looks like duplication and is not: they hold
 different halves still.
 
-| | this repo's `ci.yml` | irmago's `zk-integration.yml` |
+| | this repo's `status-checks.yml` | irmago's `zk-integration.yml` |
 | --- | --- | --- |
 | irmago | the **pinned** one, from `go.mod` | the **commit under test**, via a `replace` made inside the job |
 | this module | the commit under test | whatever is on `main` |
@@ -131,10 +131,10 @@ Only this workflow runs upstream's own ctest suite (`test-longfellow.sh`), which
 carries Google's mdoc vectors. Both build the image, so both catch a patch that
 stopped applying -- but only on their own repository's schedule.
 
-The image cache is keyed identically in both (`Dockerfile` plus `patches/*.patch`)
-so an entry means the same thing in each. It is NOT shared: Actions caches are
-scoped per repository, so the ~20 minute C++ build is paid once in each, then
-cached until the pinned ref or the patches move.
+irmago caches the image, keyed on `Dockerfile` plus `patches/*.patch`. This
+repository's status checks use the shared `go-checks` workflow, which has no
+layer cache, so every run here builds the image from scratch: about five minutes
+of C++ on a hosted runner.
 
 ### Why the image needed its own Go
 
@@ -301,7 +301,7 @@ this file does: irmago cannot link a prover, so its own
 `eudi/isomdoc/interop_live_test.go` can only round-trip a **plain** presentation.
 
 It **skips** unless a verifier answers, so no automated run covers it: neither
-this repository's `ci.yml` nor irmago's `zk-integration.yml` stands one up. Run it by
+this repository's `status-checks.yml` nor irmago's `zk-integration.yml` stands one up. Run it by
 hand:
 
 ```
