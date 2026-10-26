@@ -132,7 +132,7 @@ func verify(dir string, written []zk.Circuit) error {
 	if err != nil {
 		return fmt.Errorf("the generated directory does not load: %w", err)
 	}
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	loaded := map[string]bool{}
 	for _, circuit := range system.Circuits() {

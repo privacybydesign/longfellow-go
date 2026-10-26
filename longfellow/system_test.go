@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"testing"
 	"time"
 
@@ -118,7 +118,7 @@ func TestOpenIgnoresFilenames(t *testing.T) {
 
 	system, err := longfellow.OpenDir(staging)
 	require.NoError(t, err)
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	circuits := system.Circuits()
 	require.Len(t, circuits, 1)
@@ -284,7 +284,7 @@ func oneAttributeVersions(prover *mdoc.ProverSystem) []int64 {
 		seen[version] = true
 		versions = append(versions, version)
 	}
-	sort.Slice(versions, func(i, j int) bool { return versions[i] < versions[j] })
+	slices.Sort(versions)
 	return versions
 }
 

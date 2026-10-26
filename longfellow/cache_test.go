@@ -40,7 +40,7 @@ func TestFileCacheMakesASecondOpenFast(t *testing.T) {
 	second, err := longfellow.OpenDir(dir, longfellow.WithCache(warmCache))
 	require.NoError(t, err)
 	warmTook := time.Since(warm)
-	defer second.Close()
+	defer func() { _ = second.Close() }()
 
 	t.Logf("warm: %d circuits in %v (%.0fx faster)",
 		len(second.Circuits()), warmTook.Round(time.Millisecond),
@@ -104,7 +104,7 @@ func TestAStaleCacheEntryFallsBackAndIsCorrected(t *testing.T) {
 
 	system, err := longfellow.OpenDir(staging, longfellow.WithCache(cache))
 	require.NoError(t, err, "a stale entry must not break the load")
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	circuits := system.Circuits()
 	require.Len(t, circuits, 1)
@@ -142,7 +142,7 @@ func TestMapCacheServesACompiledInMapping(t *testing.T) {
 	warm := time.Now()
 	cached, err := longfellow.OpenDir(staging, longfellow.WithCache(compiled))
 	require.NoError(t, err)
-	defer cached.Close()
+	defer func() { _ = cached.Close() }()
 
 	require.Equal(t, expected, cached.Circuits())
 	t.Logf("compiled-in mapping: loaded in %v", time.Since(warm).Round(time.Millisecond))
@@ -179,7 +179,7 @@ func TestFileDigestIsNotTheCircuitID(t *testing.T) {
 
 	system, err := longfellow.OpenDir(staging)
 	require.NoError(t, err)
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	require.NotEqual(t, longfellow.FileDigest(content), system.Circuits()[0].Hash)
 }

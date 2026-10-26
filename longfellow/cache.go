@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"sync"
@@ -124,9 +125,7 @@ func OpenFileCache(path string) *FileCache {
 	if err := json.Unmarshal(content, &stored); err != nil || stored.Version != cacheFormatVersion {
 		return cache
 	}
-	for digest, id := range stored.Circuits {
-		cache.entries[digest] = id
-	}
+	maps.Copy(cache.entries, stored.Circuits)
 	return cache
 }
 
@@ -168,16 +167,16 @@ func (c *FileCache) Record(fileDigest, circuitID string) error {
 	name := temporary.Name()
 
 	if _, err := temporary.Write(encoded); err != nil {
-		temporary.Close()
-		os.Remove(name)
+		_ = temporary.Close()
+		_ = os.Remove(name)
 		return fmt.Errorf("write circuit cache: %w", err)
 	}
 	if err := temporary.Close(); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("write circuit cache: %w", err)
 	}
 	if err := os.Rename(name, c.path); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("write circuit cache: %w", err)
 	}
 	return nil
@@ -190,8 +189,6 @@ func (c *FileCache) Entries() map[string]string {
 	defer c.mutex.RUnlock()
 
 	copied := make(map[string]string, len(c.entries))
-	for digest, id := range c.entries {
-		copied[digest] = id
-	}
+	maps.Copy(copied, c.entries)
 	return copied
 }

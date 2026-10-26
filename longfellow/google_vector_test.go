@@ -54,7 +54,7 @@ import (
 func TestGoogleMdocVectorProvesAndVerifies(t *testing.T) {
 	vector := loadGoogleVector(t)
 	system := openSystem(t)
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	// Their vector opens one attribute, so the circuit must be a 1-attribute
 	// one. Which revision does not matter here: the vector is a credential,
@@ -95,7 +95,7 @@ func TestGoogleMdocVectorProvesAndVerifies(t *testing.T) {
 func TestGoogleMdocVectorRefusesAnUnprovenClaim(t *testing.T) {
 	vector := loadGoogleVector(t)
 	system := openSystem(t)
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	circuit, ok := circuitForAttributes(system, 1)
 	if !ok {
@@ -157,7 +157,7 @@ func loadGoogleVector(t testing.TB) googleVector {
 
 	file, err := os.Open(filepath.Join("testdata", "google_mdoc_vector_0.txt"))
 	require.NoError(t, err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	fields := map[string]string{}
 	scanner := bufio.NewScanner(file)
