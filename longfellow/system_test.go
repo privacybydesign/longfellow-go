@@ -118,7 +118,7 @@ func TestOpenIgnoresFilenames(t *testing.T) {
 
 	system, err := longfellow.OpenDir(staging)
 	require.NoError(t, err)
-	defer system.Close()
+	defer func() { _ = system.Close() }()
 
 	circuits := system.Circuits()
 	require.Len(t, circuits, 1)

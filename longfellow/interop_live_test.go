@@ -173,7 +173,7 @@ func postVerifierJSON(t *testing.T, base, path string, body any, into any) {
 
 	response, err := http.Post(base+path, "application/json", bytes.NewReader(encoded))
 	require.NoError(t, err)
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	var raw json.RawMessage
 	require.NoError(t, json.NewDecoder(response.Body).Decode(&raw))

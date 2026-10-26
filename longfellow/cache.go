@@ -167,16 +167,16 @@ func (c *FileCache) Record(fileDigest, circuitID string) error {
 	name := temporary.Name()
 
 	if _, err := temporary.Write(encoded); err != nil {
-		temporary.Close()
-		os.Remove(name)
+		_ = temporary.Close()
+		_ = os.Remove(name)
 		return fmt.Errorf("write circuit cache: %w", err)
 	}
 	if err := temporary.Close(); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("write circuit cache: %w", err)
 	}
 	if err := os.Rename(name, c.path); err != nil {
-		os.Remove(name)
+		_ = os.Remove(name)
 		return fmt.Errorf("write circuit cache: %w", err)
 	}
 	return nil

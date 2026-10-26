@@ -78,11 +78,11 @@ func run(dir, out, pkg, tag, symbol string) error {
 		}
 		circuits := system.Circuits()
 		if len(circuits) != 1 {
-			system.Close()
+			_ = system.Close()
 			return fmt.Errorf("identify %s: got %d circuits, want 1", name, len(circuits))
 		}
 		id := circuits[0].Hash
-		system.Close()
+		_ = system.Close()
 
 		digest := longfellow.FileDigest(content)
 		entries = append(entries, entry{name: name, digest: digest, id: id})

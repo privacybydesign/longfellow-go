@@ -135,7 +135,7 @@ func TestProfileWithFileCache(t *testing.T) {
 	native, err := longfellow.OpenDir(circuitDir(t), longfellow.WithCache(cache))
 	openTook := time.Since(openStart)
 	require.NoError(t, err)
-	defer native.Close()
+	defer func() { _ = native.Close() }()
 
 	timed := &timedSystem{inner: native}
 	prover := mdoc.NewProverSystem(timed)
